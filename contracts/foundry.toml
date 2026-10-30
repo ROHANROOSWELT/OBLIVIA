@@ -1,0 +1,12 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+solc = "0.8.26"
+optimizer = true
+optimizer_runs = 20000
+via_ir = true
+
+[rpc_endpoints]
+sepolia_base = "https://sepolia.base.org"
+anvil = "http://127.0.0.1:8545"
