@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guardian · OBLIVIA</title>
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">OBLIVIA <small>guardian console</small></div>
+  <nav>
+    <a href="/">Home</a><a href="/guardian">Guardian</a><a href="/explorer">Explorer</a>
+    <a href="/verify">Verify</a><a href="/docs">Docs</a>
+  </nav>
+</header>
+<main>
+  <div class="steps">
+    <div class="step" id="st-p">policy</div><div class="step" id="st-e">enroll</div>
+    <div class="step" id="st-m">memories</div><div class="step" id="st-r">erase request</div>
+    <div class="step" id="st-c">certify</div>
+  </div>
+  <h1>Guardian console</h1>
+  <p class="lead">You sign every decisive action from your own wallet. The hub has no key that
+  can act on the child's behalf. Incineration happens only after unbiased notarized confirmation.</p>
+
+  <div class="panel">
+    <h3>1 · Your wallet + child (no PII here, cryptonym only)</h3>
+    <div class="row">
+      <button id="wallet" class="primary">Connect wallet</button>
+      <span id="walletAddr" class="mono"></span>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <span class="hint">jurisdiction:</span>
+      <div class="chips" id="jurChips"></div>
+      <span class="hint">age band:</span>
+      <select id="ageBand">
+        <option value="0">0–5</option><option value="1" selected>6–12</option>
+        <option value="2">13–17</option><option value="3">18+ (principal self)</option>
+      </select>
+      <span class="hint">child's age: <input id="childAge" type="number" min="0" max="17" value="9" style="width:70px"></span>
+    </div>
+    <div class="kv" id="policyView" style="margin-top:10px"></div>
+    <div class="row" style="margin-top:14px">
+      <button id="enroll">Open the child's protected account</button>
+      <span id="enrollOut" class="hint break"></span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>2 · Place items (the hub stores only AES-GCM blobs you encrypt)</h3>
+    <div class="row">
+      <input id="passphrase" type="password" placeholder="vault passphrase (stays in this browser)">
+      <input id="memText" placeholder="e.g. voice note transcript…">
+      <select id="memKind"><option value="MEMORY">memory</option><option value="CONVO">conversation</option><option value="PROFILE">profile</option></select>
+      <button id="addMemory">Encrypt + commit</button>
+    </div>
+    <div id="memList" class="kv" style="margin-top:10px"></div>
+    <div id="memOut" class="hint break" style="margin-top:8px"></div>
+  </div>
+
+  <div class="panel">
+    <h3>3 · Erasure request (per scope, or FULL)</h3>
+    <div class="row">
+      <select id="scopeSel"><option value="FULL">FULL scope (everything)</option></select>
+      <button id="requestErase" class="danger">Request erasure</button>
+      <span id="reqOut" class="hint"></span>
+    </div>
+    <p class="hint">This signs <code>requestErasure()</code> in your wallet — the proof of
+    authority the protocol requires before anything can be notarized.</p>
+  </div>
+
+  <div class="panel">
+    <h3>4 · Confirmation (notary)</h3>
+    <div id="queue"></div>
+  </div>
+</main>
+<div class="footer">guardian console · every action is a real wallet transaction on the configured chain</div>
+<script src="/assets/ethers.umd.min.js"></script>
+<script src="/assets/app.js"></script>
+<script>
+const O = window.OBLIVIA, $ = id => document.getElementById(id);
+let account = null, subjectId = null, chosenJurisdiction = 'CPP';
+
+function setStep(id, cls) { $(id).className = 'step ' + cls; }
+
+async function refreshQueue() {
+  const q = await O.get('/api/notary/queue');
+  $('queue').innerHTML = !q.ops?.length
+    ? '<span class="hint">queue empty</span>'
+    : `<table><thead><tr><th>op</th><th>kind</th><th>scope</th><th>stage</th><th>tx</th></tr></thead><tbody>` +
+      q.ops.map(o => `<tr><td class="mono">${O.short(o.opId)}</td><td>${O.esc(o.kind)}</td>
+        <td class="mono">${o.scopeRef === '0x0000..' || o.scopeRef === '0x' + '00'.repeat(32) ? 'FULL' : O.short(o.scopeRef)}</td>
+        <td>${O.statusBadge(o.stage)}</td>
+        <td class="mono">${o.txHash ? '<a href="/explorer#' + o.txHash + '">' + O.short(o.txHash, 8) + '</a>' : (o.decHash ? '<a href="/cert/' + o.decHash + '">DEC</a>' : '—')}</td>
+        </tr>`).join('') + '</tbody></table>';
+}
+
+async function refreshSubject() {
+  if (!subjectId) return;
+  const s = await O.get('/api/subjects/' + subjectId);
+  $('memList').innerHTML = s.items.map(i => `
+    <div class="k">item ${O.short(i.memoryId)}</div><div>${O.esc(i.kind)} · ${O.short(i.scopeRef)} · ${new Date(i.createdAt).toLocaleString()}</div>`).join('') || '<span class="hint">no items yet</span>';
+  $('memOut').textContent = 'dataRoot: ' + (s.dataRoot ?? '') + ' · items: ' + s.itemsCount;
+  // scope options from items
+  const sel = $('scopeSel');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="FULL">FULL scope (everything)</option>' +
+    s.items.map(i => `<option value="${i.scopeRef}">item ${O.short(i.memoryId)}</option>`).join('');
+  sel.value = cur;
+}
+
+async function ensureSubject() {
+  const r = await O.post('/api/subjects', { jurisdiction: chosenJurisdiction });
+  subjectId = r.subjectId; $('enrollOut').textContent = 'subject ' + subjectId;
+  for (const s of ['st-p','st-e']) setStep(s, 'done');
+  return subjectId;
+}
+
+async function onboard() {
+  try {
+    if (!account) await clickWallet();
+    const sid = await ensureSubject();
+    const band = Number($('ageBand').value);
+    const childAge = Math.max(0, Math.min(17, Number($('childAge').value || 0)));
+    const pol = await O.get('/api/policies/' + chosenJurisdiction);
+    const yearsToVest = Math.max(0, (pol.selfEraseAge ?? 18) - childAge);
+    const vestAt = Math.floor(Date.now() / 1000) + yearsToVest * 365 * 24 * 3600;
+    const dataRoot = (await O.get('/api/subjects/' + sid)).dataRoot;
+    const b3 = ethers.zeroPadValue(ethers.hexlify(ethers.toUtf8Bytes(chosenJurisdiction)), 3);
+    const tx = await O.registry().then((reg) => reg.openSubject(
+      sid, b3, ethers.id('GUARDIAN_DECLARATION@v1:' + account), dataRoot, vestAt, band,
+    ));
+    $('enrollOut').textContent = 'tx ' + O.short(tx.hash) + ' …';
+    const rc = await tx.wait(1);
+    setStep('st-e', 'done');
+    $('enrollOut').innerHTML = 'tx <a href="/explorer#' + rc.hash + '">' + O.short(rc.hash) + '</a> · vested in ' + yearsToVest + 'y';
+    await refreshSubject();
+  } catch (e) { $('enrollOut').textContent = '✗ ' + (e.message || e); }
+}
+
+async function clickWallet() {
+  account = await O.connectWallet();
+  $('walletAddr').textContent = account;
+}
+
+async function boot() {
+  // policy chips
+  const st = await O.get('/api/chain/status');
+  if (!st.deploy) { $('enrollOut').textContent = '⚠ no deployment — run scripts/run-local.sh'; return; }
+  const ps = await O.get('/api/policies');
+  $('jurChips').innerHTML = ps.filter(p => p.onChain && p.active).map(p =>
+    `<button class="chip ${p.code === chosenJurisdiction ? 'on' : ''}" data-c="${p.code}" onclick="(window.__pick|| (()=>false))('${p.code}')">${p.code} · self-erase at ${p.selfEraseAge}</button>`).join('');
+  window.__pick = async (c) => { chosenJurisdiction = c; [...document.querySelectorAll('.chip')].forEach(e => e.classList.toggle('on', e.dataset.c === c)); await showPolicy(); };
+  await showPolicy();
+  $('wallet').onclick = clickWallet;
+  $('enroll').onclick = onboard;
+  $('addMemory').onclick = addMemory;
+  $('requestErase').onclick = requestErase;
+  await refreshQueue(); setInterval(refreshQueue, 2500);
+}
+
+async function showPolicy() {
+  const p = (await O.get('/api/policies/' + chosenJurisdiction));
+  $('policyView').innerHTML = `<div class="k">version</div><div>${p.version ?? '?'}</div>
+    <div class="k">self-erase age</div><div>${p.selfEraseAge ?? '?'}</div>
+    <div class="k">max retention</div><div>${p.maxRetentionDays ?? '?'} days</div>
+    <div class="k">profiling allowed</div><div>${p.profilingAllowed ? 'yes' : '<b>NO</b>'}</div>
+    <div class="k">statute</div><div class="hint">${O.esc(p.statuteCite || '')}</div>`;
+}
+
+async function addMemory() {
+  try {
+    const pp = $('passphrase').value; if (!pp) throw new Error('passphrase first');
+    const txt = $('memText').value; if (!txt) throw new Error('type a memory');
+    const enc = await O.encryptMemory(pp, txt);
+    const sid = subjectId ?? await ensureSubject();
+    const r = await O.post('/api/ops/memories', enc);
+    $('memOut').innerHTML = 'committed item ' + O.short(r.memoryId) + ' · scope ' + O.short(r.scopeRef) + ' · dataRoot ' + O.short(r.dataRoot);
+    const reg = await O.registry();
+    const tx = await reg.addMemory(sid, r.scopeRef, ethers.id('dataCommitment:' + r.memoryId));
+    const rc = await tx.wait(1);
+    $('memOut').innerHTML += `<div>addMemory tx <a href="/explorer#${rc.hash}">${O.short(rc.hash)}</a></div>`;
+    setStep('st-m', 'done');
+    await refreshSubject();
+  } catch (e) { $('memOut').textContent = '✗ ' + (e.message || e); }
+}
+
+async function requestErase() {
+  try {
+    const scope = $('scopeSel').value === 'FULL' ? '0x' + '00'.repeat(32) : $('scopeSel').value;
+    if (!subjectId) throw new Error('enroll first');
+    const reg = await O.registry();
+    const tx = await reg.requestErasure(subjectId, scope);
+    await tx.wait(1);
+    const r = await O.post('/api/ops/erase-request', { scopeRef: scope, requestTxHash: tx.hash });
+    $('reqOut').innerHTML = 'requestErasure + queue ' + O.statusBadge(r.stage) + ` · coreHash <span class="mono">${O.short(r.coreHash)}</span>`;
+    setStep('st-r', 'done');
+    await refreshQueue();
+  } catch (e) { $('reqOut').textContent = '✗ ' + (e.message || e); }
+}
+
+boot();
+</script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your data · OBLIVIA</title>
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">OBLIVIA <small>your data, your rules</small></div>
+  <nav><a href="/">Home</a><a href="/docs">Docs</a></nav>
+</header>
+<main>
+  <h1>Your data, your 🧭 rules</h1>
+  <p class="lead">A grown-up in your family has set up an account for you. You can always see
+  what is stored and ask them to erase it. When you are old enough, the controls belong to YOU.</p>
+  <div class="panel" id="facts">loading…</div>
+</main>
+<script src="/assets/ethers.umd.min.js"></script><script src="/assets/app.js"></script>
+<script>
+(async () => {
+  const id = location.pathname.split('/')[2];
+  const O = window.OBLIVIA;
+  const s = await O.get('/api/subjects/' + id);
+  const p = await O.get('/api/policies/' + (s.jurisdiction || 'CPP'));
+  document.getElementById('facts').innerHTML = !s.itemsCount
+    ? '<p>Nothing is stored right now.</p>'
+    : '<p class="mono">dataRoot: ' + O.esc(s.dataRoot) + '</p><p>' + s.itemsCount + ' item(s) are stored, encrypted. Your grown-up can erase them on request.</p><p>Rules for your region: self-erase allowed from age ' + O.esc(p.selfEraseAge) + ', max storage ' + O.esc(p.maxRetentionDays) + ' days.</p>';
+})();
+</script>
+</body>
+</html>

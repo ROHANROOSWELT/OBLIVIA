@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Verify · OBLIVIA</title>
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">OBLIVIA <small>independent verification</small></div>
+  <nav><a href="/">Home</a><a href="/explorer">Explorer</a><a href="/docs">Docs</a></nav>
+</header>
+<main>
+  <h1>Verify an erasure certificate</h1>
+  <p class="lead">Paste a DEC (or pick one from the hub). This page recomputes the certificate hash,
+  checks it against what the chain pinned, and links the erasure transaction. No trust in Oblivia required.</p>
+  <div class="panel">
+    <div class="row">
+      <select id="pick"><option value="">— choose from hub —</option></select>
+      <button id="verify" class="primary">Re-verify</button>
+    </div>
+    <div id="out"></div>
+  </div>
+</main>
+<script src="/assets/ethers.umd.min.js"></script><script src="/assets/app.js"></script>
+<script>
+const O = window.OBLIVIA, $ = id => document.getElementById(id);
+let data = null;
+
+async function boot() {
+  const q = await O.get('/api/notary/queue');
+  $('pick').innerHTML += (q.ops || []).filter(o => o.decHash).map(o =>
+    `<option value="${o.decHash}">op ${O.esc(O.short(o.opId))} → ${O.esc(O.short(o.decHash))}</option>`).join('');
+  const fromPath = location.pathname.split('/')[2];
+  if (fromPath) { $('pick').value = fromPath; await doVerify(); }
+  $('verify').onclick = doVerify;
+}
+
+async function doVerify() {
+  const decHash = $('pick').value;
+  if (!decHash) { $('out').innerHTML = '<span class="hint">choose a certificate</span>'; return; }
+  const r = await O.get('/api/dec/' + decHash);
+  if (!r.ok) { $('out').innerHTML = '<span class="badge bad">not found</span>'; return; }
+  const { dec, decHash: hubHash } = r;
+
+  // 1) canonical rehash (must equal the hub's stored fullHash)
+  const canon = stableStringify(dec);
+  const recomputed = ethers.keccak256(ethers.toUtf8Bytes(canon));
+  const p1 = recomputed === hubHash ? ['ok','canonical rehash matches (' + O.short(recomputed) + ')'] : ['bad','canonical rehash MISMATCH'];
+
+  // 2) the pinned on-chain hash: subjectId scopeKey → certificates()
+  let p2 = ['warn', 'chain not checked'];
+  let p3 = ['', ''];
+  try {
+    const st = await O.get('/api/chain/status');
+    if (st.deploy) {
+      const abi = await (await fetch('/assets/eraseregistry-abi.json')).json();
+      const reg = new ethers.Contract(st.deploy.EraseRegistry, abi, new ethers.JsonRpcProvider(st.chain?.rpc));
+      const scopeRef = dec.scope === 'FULL' ? '0x' + '00'.repeat(32) : dec.scope;
+      const scopeKey = ethers.keccak256(ethers.AbiCoder.defaultAbiCoder().encode(['bytes32', 'bytes32'], [dec.subjectId, scopeRef]));
+      const onChain = await reg.certificates(scopeKey);
+      if (onChain && onChain !== '0x' + '00'.repeat(32)) {
+        p2 = ['ok', 'chain pinned: ' + O.short(onChain, 10)];
+      } else {
+        p2 = ['bad', 'scopeKey has no certificate on chain'];
+      }
+    }
+  } catch (e) { p2 = ['bad', 'chain read failed: ' + (e.message || e)]; }
+
+  // 3) receipt: tx mined into the registry and succeeded
+  try {
+    const st = await O.get('/api/chain/status');
+    const prov = new ethers.JsonRpcProvider(st.chain?.rpc);
+    const rc = await prov.getTransactionReceipt(dec.receipt?.erasureTxHash || '');
+    if (rc && rc.status === 1 && rc.to?.toLowerCase() === (await (await O.get('/api/chain/status')).deploy?.EraseRegistry || '').toLowerCase()) {
+      p3 = ['ok', 'erasure tx mined in block #' + rc.blockNumber];
+    } else if (!rc) {
+      p3 = ['warn', 'erasure tx not found on chain yet'];
+    } else {
+      p3 = ['bad', 'receipt did not validate against the registry'];
+    }
+  } catch (err) { p3 = ['bad', err.message || String(err)]; }
+
+  $('out').innerHTML = `
+    <div class="row"> ${badge(p1)} ${badge(p2)} ${badge(p3)} </div>
+    <div class="kv" style="margin-top:12px">
+      <div class="k">DEC type</div><div>${O.esc(dec.type)} v${dec.version}</div>
+      <div class="k">subjectId</div><div class="mono">${O.short(dec.subjectId)}</div>
+      <div class="k">statute</div><div>${O.esc(dec.statuteCite || dec.jurisdiction)}</div>
+      <div class="k">tx</div><div class="mono">${O.esc(dec.receipt?.erasureTxHash || '')}</div>
+    </div>
+    <h2>Canonical JSON</h2><pre class="code">${O.esc(canon)}</pre>`;
+}
+
+function badge([cls, text]) { return cls ? `<span class="badge ${cls}">${O.esc(text)}</span>` : ''; }
+function stableStringify(obj) {
+  if (obj === null || typeof obj !== 'object' || Array.isArray(obj)) return JSON.stringify(obj);
+  const keys = Object.keys(obj).sort();
+  return '{' + keys.map(k => JSON.stringify(k) + ':' + stableStringify(obj[k])).join(',') + '}';
+}
+boot();
+</script>
+</body>
+</html>

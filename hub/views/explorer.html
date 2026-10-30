@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Explorer · OBLIVIA</title>
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">OBLIVIA <small>on-chain explorer</small></div>
+  <nav><a href="/">Home</a><a href="/guardian">Guardian</a><a href="/verify">Verify</a></nav>
+</header>
+<main>
+  <h1>On-chain index</h1>
+  <p class="lead">Everything below is queried live from the configured RPC — nothing is cached or faked.</p>
+  <div class="panel" id="chain"></div>
+
+  <div class="panel">
+    <h3>Policy tables (on-chain, live)</h3>
+    <div id="policies"></div>
+  </div>
+
+  <div class="panel">
+    <h3>Notary queue / recent certificates</h3>
+    <div id="queue"></div>
+  </div>
+</main>
+<script src="/assets/ethers.umd.min.js"></script><script src="/assets/app.js"></script>
+<script>
+const O = window.OBLIVIA;
+async function refresh() {
+  const st = await O.get('/api/chain/status');
+  document.getElementById('chain').innerHTML = st.ok
+    ? 'head <code>#' + st.blockNumber + '</code> · gas <code>' + (st.gasPrice ? O.esc(st.gasPrice) : '—') + '</code> · registry <code class="mono">' + O.esc(st.deploy?.EraseRegistry || '') + '</code>'
+    : '<span class="badge bad">' + O.esc(st.error || 'rpc error') + '</span>';
+  const ps = await O.get('/api/policies');
+  document.getElementById('policies').innerHTML = !ps.length
+    ? '<span class="hint">no policies on chain</span>'
+    : '<table><thead><tr><th>code</th><th>version</th><th>self-erase</th><th>retention</th><th>profiling</th><th>statute</th></tr></thead><tbody>' +
+      ps.map(p => p.onChain && p.active
+        ? '<tr><td><code>' + O.esc(p.code) + '</code></td><td>' + p.version + '</td><td>' + p.selfEraseAge + '</td><td>' + p.maxRetentionDays + ' d</td><td>' + (p.profilingAllowed ? 'allowed' : '<b>forbidden</b>') + '</td><td class="hint">' + O.esc(p.statuteCite || '') + '</td></tr>'
+        : '<tr><td>' + O.esc(p.code) + '</td><td colspan="5" class="badge ' + (p.onChain ? 'warn' : 'bad') + '">' + (p.onChain ? 'inactive' : 'unreachable') + '</td></tr>')
+        .join('') + '</tbody></table>';
+  const q = await O.get('/api/notary/queue');
+  document.getElementById('queue').innerHTML = !q.ops?.length
+    ? '<span class="hint">no ops yet</span>'
+    : '<table><thead><tr><th>op</th><th>kind</th><th>stage</th><th>DEC</th></tr></thead><tbody>' +
+      q.ops.map(o => '<tr><td class="mono">' + O.short(o.opId) + '</td><td>' + O.esc(o.kind) + '</td><td>' + O.statusBadge(o.stage) + '</td><td class="mono">' + (o.decHash ? '<a href="/cert/' + o.decHash + '">' + O.short(o.decHash, 10) + '</a>' : '—') + '</td></tr>')
+        .join('') + '</tbody></table>';
+}
+refresh(); setInterval(refresh, 4000);
+</script>
+</body>
+</html>

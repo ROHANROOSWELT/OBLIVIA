@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Docs · OBLIVIA</title>
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">OBLIVIA <small>docs</small></div>
+  <nav><a href="/">Home</a><a href="/guardian">Guardian</a></nav>
+</header>
+<main>
+<h1>How Oblivia works</h1>
+<div class="panel"><h3>Who may ask, under which statute, at what age-boundary.</h3>
+<p>Oblivia is a rights lifecycle protocol for a parent or legal guardian to erase a child's
+data trail under a specific privacy statute — with a receipt — instead of a blind
+"delete my profile" app hook.</p>
+<h3>Flows</h3>
+<p><b>Enroll:</b> guardian opens a protected subject bound to a <em>live policy version</em>
+(jurisdiction, self-erase age, retention cap, profiling ban). Pseudonym only, the wallet
+out only hashes. Chain stores NO personal data.</p>
+<p><b>Consent &amp; data:</b> memories are encrypted in the guardian's browser
+(AES-256-GCM), hub stores only ciphertext. Guardian commits the data-root on chain.</p>
+<p><b>Erase:</b> guardian requests (wallet tx = authority proof) → op queued → notarized
+(Chainlink DON when CRE is configured, hub key otherwise) → on-chain receipt → DEC v2
+certificate hash pinned on chain (item nullifiers recomputed from ciphertext hash, all
+shred done only AFTER the receipt confirms) → hub wipes the ciphertext it held.</p>
+<h3>Stages the queue can be in</h3>
+<ul>
+<li><span class="badge warn">awaiting guardian txn</span> (entry created, no authority in hub yet)</li>
+<li><span class="badge info">queued for notary</span> (guardian tx seen)</li>
+<li><span class="badge info">notarized (ATTESTOR)</span> / <span class="badge info">report sent (DON)</span> (executor fired)</li>
+<li><span class="badge ok">confirmed on chain</span> (receipt verified → DEC issued + shred)</li>
+</ul>
+<h3>What is / is NOT stored on chain</h3>
+<p>On chain: statute-bound bindings, hashed commitments, DEC hashes, lifecycle transitions
+and wallet authority hand-offs. NOT on chain: any plaintext, any PII.</p>
+<h3>Trust model</h3>
+<p>Guardian funds gas. Hub has no guardian key. The attestor key signs only what a
+wallet already authorized. Anything the hub writes it published publicly on chain.</p>
+<h3>Change engine</h3>
+<p>Rule tables live in <code>PolicyRegistry</code> — jurisdictions can evolve without
+contract redeploy (semver per jurisdiction), historical versions remain addressable to
+prove what was in force at time of enrollment.</p>
+</div>
+<div class="footer">Run locally: <code>bash scripts/run-local.sh</code></div>
+</main>
+</body>
+</html>

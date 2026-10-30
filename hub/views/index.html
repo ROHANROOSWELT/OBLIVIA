@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OBLIVIA — Minor Rights Lifecycle Protocol</title>
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">OBLIVIA <small>Minor Rights Lifecycle Protocol</small></div>
+  <nav>
+    <a href="/">Home</a><a href="/guardian">Guardian</a><a href="/explorer">Explorer</a>
+    <a href="/verify">Verify</a><a href="/docs">Docs</a>
+  </nav>
+</header>
+<main>
+  <h1>Your child's data privacy is enforceable.</h1>
+  <p class="lead">Oblivia turns a guardian's right to erase their child's data into an
+  on-chain, statute-bound workflow — logged under COPPA / Maryland MODPA / GDPR / India DPDP,
+  with a court-ready certificate and an auditable trail that survives internet-forgotten claims.</p>
+
+  <div class="grid">
+    <div class="panel">
+      <h3>Policy Warden</h3>
+      <p>Live jurisdiction rule tables on chain — self-erasure ages, retention caps, profiling bans —
+      not hardcoded UI numbers. Each enrollment pins the policy version in force at that moment.</p>
+      <div id="policies">checking /api/policies …</div>
+    </div>
+    <div class="panel">
+      <h3>Rights vesting</h3>
+      <p>The guardian's authority expires at the statutory age threshold. After that, the
+      (now-adult) principal holds the rights and the guardian does not. Wallet-proven.</p>
+    </div>
+    <div class="panel">
+      <h3>Erasure Evidence Engine</h3>
+      <p>Shredding + nullifiers + <code>DEC v2</code> certificate whose hash is pinned on chain —
+      independently verifiable without trusting us.</p>
+      <a class="btn" href="/verify">Verify a certificate →</a>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Demo path (local)</h3>
+    <div class="row">
+      <a class="btn" href="/guardian">1 · Guardian flow (enroll → consent → erase → certify)</a>
+      <a class="btn" href="/explorer">2 · Read-only chain explorer</a>
+      <a class="btn" href="/verify">3 · Independent verify</a>
+    </div>
+    <p class="hint">Run <code>bash scripts/run-local.sh</code> first. Chain + contracts must be up.</p>
+  </div>
+
+  <div class="panel">
+    <h3>Live system status</h3>
+    <div id="status">querying /api/chain/status …</div>
+  </div>
+</main>
+<div class="footer">OBLIVIA · BLI Legal Tech Hackathon 2 build · nothing here is stored on your behalf without your wallet consenting</div>
+<script src="/assets/ethers.umd.min.js"></script>
+<script src="/assets/app.js"></script>
+<script>
+const O = window.OBLIVIA;
+
+async function init() {
+  const st = await O.get('/api/chain/status');
+  const el = document.getElementById('status');
+  if (!st.ok) {
+    el.innerHTML = '<span class="badge bad">chain down: ' + O.esc(st.error || 'unknown') + '</span>';
+  } else {
+    el.innerHTML = 'RPC: <code>' + O.esc(st.chain?.rpc || '') + '</code> · head: <code>#' + st.blockNumber + '</code> · gas: <code>' + (st.gasPrice ? O.esc(st.gasPrice) : 'n/a') + '</code>' +
+      (st.deploy ? '<div class="hint mono">registry ' + O.esc(st.deploy.EraseRegistry) + '</div>' : '<div class="hint">no deployments.json yet</div>');
+  }
+  const ps = await O.get('/api/policies');
+  document.getElementById('policies').innerHTML = '<table><thead><tr><th>Code</th><th>Self-erase</th><th>Retention</th><th>No profiling</th><th>Statute</th></tr></thead><tbody>' +
+    ps.map((p) => p.onChain && p.active
+      ? `<tr><td><code>${O.esc(p.code)}</code></td><td>${p.selfEraseAge}</td><td>${p.maxRetentionDays}d</td><td>${p.profilingAllowed ? 'no' : 'YES'}</td><td class="hint">${O.esc((p.statuteCite || '').slice(0, 42))}</td></tr>`
+      : `<tr><td><code>${O.esc(p.code)}</code></td><td colspan="4" class="badge ${p.onChain ? 'warn' : 'bad'}">${p.onChain ? 'inactive' : 'chain unreachable'}</td></tr>`)
+    .join('') + '</tbody></table>';
+}
+init();
+</script>
+</body>
+</html>

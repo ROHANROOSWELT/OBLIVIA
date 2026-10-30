@@ -7,3 +7,6 @@ out/
 broadcast/
 workflows/bin/
 .DS_Store
+
+hub/deployments.json
+contracts/deployments.json

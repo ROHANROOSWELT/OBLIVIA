@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Notary seal · OBLIVIA</title>
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">OBLIVIA <small>notary queue</small></div>
+  <nav><a href="/">Home</a><a href="/guardian">Guardian</a><a href="/docs">Docs</a></nav>
+</header>
+<main>
+  <h1>Notary queue</h1>
+  <p class="lead">Lifecycle ops waiting for notarization. ANYONE with a wallet may attempt the
+  on-chain <code>notarySeal()</code> for a queued op — the contract only accepts the payload
+  signed by our hub key, so you cannot tamper; you only witness.</p>
+  <div class="panel" id="out"></div>
+</main>
+<script src="/assets/ethers.umd.min.js"></script>
+<script src="/assets/app.js"></script>
+<script>
+const O = window.OBLIVIA;
+async function refresh() {
+  const q = await O.get('/api/notary/queue');
+  const rows = (q.ops || []).filter(o => o.stage === 'QUEUED');
+  document.getElementById('out').innerHTML = !rows.length
+    ? '<span class="hint">nothing queued. the attestor-worker or CRE workflow will seal ops automatically when configured.</span>'
+    : `<table><thead><tr><th>op</th><th>kind</th><th>scope</th><th>payload</th><th></th></tr></thead><tbody>` +
+      rows.map(o => `<tr>
+        <td class="mono">${O.short(o.opId)}</td>
+        <td>${O.esc(o.kind)}</td>
+        <td class="mono">${o.scopeRef === '0x' + '00'.repeat(32) ? 'FULL' : O.short(o.scopeRef)}</td>
+        <td class="mono">${O.short(o.payload)}</td>
+        <td><button onclick="seal('${o.opId}')">Seal</button></td>
+      </tr>`).join('') + '</tbody></table>';
+}
+window.seal = async (opId) => {
+  try {
+    await O.connectWallet();
+    const reg = await O.registry();
+    const entry = (await O.get('/api/notary/queue')).ops.find(o => o.opId === opId);
+    const sigRes = await O.post('/api/notary/sign', { opId });
+    if (!sigRes.ok) throw new Error('hub sign failed');
+    const tx = await reg.notarize(sigRes.payload, sigRes.sig);
+    await tx.wait(1);
+    const conf = await O.post('/api/notary/confirmed', { opId, txHash: tx.hash, notaryPath: 'ATTESTOR' });
+    if (!conf.ok) throw new Error(conf.error || 'confirm failed');
+    alert('Sealed. DEC: ' + conf.fullHash);
+    refresh();
+  } catch (e) { alert('✗ ' + (e.message || e)); }
+};
+refresh(); setInterval(refresh, 3000);
+</script>
+</body>
+</html>

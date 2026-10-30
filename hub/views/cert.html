@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Certificate · OBLIVIA</title>
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">OBLIVIA <small>decommissioned data certificate (DEC v2)</small></div>
+  <nav><a href="/">Home</a><a href="/verify">Verify</a><a href="/docs">Docs</a></nav>
+</header>
+<main>
+  <h1>DEC v2</h1>
+  <div id="body" class="panel">loading…</div>
+</main>
+<script src="/assets/ethers.umd.min.js"></script><script src="/assets/app.js"></script>
+<script>
+(async () => {
+  const O = window.OBLIVIA;
+  const decHash = location.pathname.split('/')[2];
+  const r = await O.get('/api/dec/' + decHash);
+  const el = document.getElementById('body');
+  if (!r.ok) { el.textContent = 'certificate not found on this hub'; return; }
+  const d = r.dec;
+  el.innerHTML = `
+    <div class="kv">
+      <div class="k">fullHash (hub)</div><div class="mono break"><a href="/verify/${O.esc(decHash)}">${O.esc(decHash)}</a></div>
+      <div class="k">scope</div><div>${O.esc(d.scope)}</div>
+      <div class="k">statute</div><div>${O.esc(d.statuteCite || '')} <span class="hint">(${O.esc(d.jurisdiction)})</span></div>
+      <div class="k">actor</div><div class="mono">${O.esc(d.requestAuthority?.actor || '')} · ${O.esc(d.requestAuthority?.authority || '')}</div>
+      <div class="k">executor</div><div class="mono">${O.esc(d.executorMethod)}</div>
+      <div class="k">items erased</div><div>${d.itemsErased}</div>
+      <div class="k">erasure tx</div><div class="mono break"><a href="/explorer#${O.esc(d.receipt?.erasureTxHash || '')}">${O.esc(d.receipt?.erasureTxHash || '')}</a></div>
+      <div class="k">notary</div><div>${O.esc(d.receipt?.notary || '')}</div>
+      <div class="k">erased at</div><div>${d.receipt?.erasedAt ? new Date(d.receipt.erasedAt).toLocaleString() : ''}</div>
+    </div>
+    <h2 style="margin-top:20px">Item nullifiers</h2>
+    <table><thead><tr><th>memoryId</th><th>nullifier</th></tr></thead><tbody>
+    ${d.itemNullifiers.map(n => '<tr><td class="mono">' + O.short(n.memoryId) + '</td><td class="mono break">' + n.nullifier + '</td></tr>').join('')}
+    </tbody></table>
+    <p class="hint">Verify it independently → <a href="/verify/${O.esc(decHash)}">/verify/${O.esc(decHash)}</a></p>`;
+})();
+</script>
+</body>
+</html>

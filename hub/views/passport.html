@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Oblivia passport · OBLIVIA</title>
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">OBLIVIA <small>digital life passport</small></div>
+  <nav><a href="/">Home</a><a href="/guardian">Guardian</a><a href="/explorer">Explorer</a></nav>
+</header>
+<main>
+  <h1>Oblivia life passport</h1>
+  <p class="lead">The on-chain binding of this child's public identity — no names, no PII — plus every erasure receipt.</p>
+  <div class="panel" id="body">loading…</div>
+</main>
+<script src="/assets/ethers.umd.min.js"></script><script src="/assets/app.js"></script>
+<script>
+(async () => {
+  const O = window.OBLIVIA, id = location.pathname.split('/')[2];
+  const [sub, chain] = await Promise.all([O.get('/api/subjects/' + id), O.get('/api/chain/status')]);
+  const oc = sub.onChain ?? {};
+  document.getElementById('body').innerHTML = `
+    <div class="kv">
+      <div class="k">subjectId (cryptonym)</div><div class="mono break">${O.esc(id)}</div>
+      <div class="k">jurisdiction</div><div>${O.esc(sub.jurisdiction)}</div>
+      <div class="k">items (hub, encrypted)</div><div>${sub.itemsCount}</div>
+      <div class="k">erased</div><div>${sub.erased ? '<span class="badge ok">yes</span>' : 'no'}</div>
+      <div class="k">on-chain binding</div><div class="mono">${oc.onChain ? 'guardian ' + O.esc(oc.guardian ?? '') + ' · v' + (oc.policyVersion ?? '') + ' · opened ' + (oc.openedAt ? new Date(oc.openedAt * 1000).toLocaleString() : '?') : 'not enrolled yet'}</div>
+      <div class="k">status</div><div>${oc.onChain ? ['EXISTS', 'ACTIVE', 'ERASED'][oc.status] ?? oc.status : '—'}</div>
+    </div>
+    ${sub.decs?.length ? '<hr class="sep"><h2>Erasure receipts</h2>' + sub.decs.map((h) => `<div>· <a href="/cert/${O.esc(h)}" class="mono">${O.short(h, 12)}</a></div>`).join('') : ''}`;
+})();
+</script>
+</body>
+</html>
