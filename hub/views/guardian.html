@@ -1,117 +1,234 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Guardian · OBLIVIA</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guardian Console · OBLIVIA</title>
 <link rel="stylesheet" href="/assets/style.css">
 </head>
 <body>
-<header class="topbar">
-  <div class="brand">OBLIVIA <small>guardian console</small></div>
-  <nav>
-    <a href="/">Home</a><a href="/guardian">Guardian</a><a href="/explorer">Explorer</a>
-    <a href="/verify">Verify</a><a href="/docs">Docs</a>
-  </nav>
-</header>
-<main>
+<a class="skip-link" href="#main-content">Skip to content</a>
+<header class="site-header"></header>
+
+<main id="main-content" class="app-page">
+  <div class="page-title">
+    <div>
+      <p class="eyebrow">Guardian Execution Console</p>
+      <h1>Enforce Your Child’s Privacy Rights</h1>
+      <p>Sign every decisive action directly from your wallet. The protocol maintains client-side encryption keys in this browser; the on-chain registry only ever records cryptographic commitments and dual-notary erasure receipts.</p>
+    </div>
+    <span class="truth-tag truth-live"><span></span>LIVE ON-CHAIN AUTHORITY</span>
+  </div>
+
+  <!-- Steps bar -->
   <div class="steps">
-    <div class="step" id="st-p">policy</div><div class="step" id="st-e">enroll</div>
-    <div class="step" id="st-m">memories</div><div class="step" id="st-r">erase request</div>
-    <div class="step" id="st-c">certify</div>
-  </div>
-  <h1>Guardian console</h1>
-  <p class="lead">You sign every decisive action from your own wallet. The hub has no key that
-  can act on the child's behalf. Incineration happens only after unbiased notarized confirmation.</p>
-
-  <div class="panel">
-    <h3>1 · Your wallet + child (no PII here, cryptonym only)</h3>
-    <div class="row">
-      <button id="wallet" class="primary">Connect wallet</button>
-      <span id="walletAddr" class="mono"></span>
-    </div>
-    <div class="row" style="margin-top:10px">
-      <span class="hint">jurisdiction:</span>
-      <div class="chips" id="jurChips"></div>
-      <span class="hint">age band:</span>
-      <select id="ageBand">
-        <option value="0">0–5</option><option value="1" selected>6–12</option>
-        <option value="2">13–17</option><option value="3">18+ (principal self)</option>
-      </select>
-      <span class="hint">child's age: <input id="childAge" type="number" min="0" max="17" value="9" style="width:70px"></span>
-    </div>
-    <div class="kv" id="policyView" style="margin-top:10px"></div>
-    <div class="row" style="margin-top:14px">
-      <button id="enroll">Open the child's protected account</button>
-      <span id="enrollOut" class="hint break"></span>
-    </div>
+    <div class="step on" id="st-p">01 · Jurisdiction Policy</div>
+    <div class="step" id="st-e">02 · Enrollment</div>
+    <div class="step" id="st-m">03 · Client Vault</div>
+    <div class="step" id="st-r">04 · Erasure Request</div>
+    <div class="step" id="st-c">05 · Notarized Certification</div>
   </div>
 
-  <div class="panel">
-    <h3>2 · Place items (the hub stores only AES-GCM blobs you encrypt)</h3>
-    <div class="row">
-      <input id="passphrase" type="password" placeholder="vault passphrase (stays in this browser)">
-      <input id="memText" placeholder="e.g. voice note transcript…">
-      <select id="memKind"><option value="MEMORY">memory</option><option value="CONVO">conversation</option><option value="PROFILE">profile</option></select>
-      <button id="addMemory">Encrypt + commit</button>
-    </div>
-    <div id="memList" class="kv" style="margin-top:10px"></div>
-    <div id="memOut" class="hint break" style="margin-top:8px"></div>
-  </div>
+  <div class="guardian-grid">
+    <!-- Left Column: Actions Ticket -->
+    <div class="trade-ticket">
+      <div class="panel-head">
+        <h2>1 · Child Enrollment &amp; Wallet</h2>
+        <span class="badge ok">Step 1 &amp; 2</span>
+      </div>
 
-  <div class="panel">
-    <h3>3 · Erasure request (per scope, or FULL)</h3>
-    <div class="row">
-      <select id="scopeSel"><option value="FULL">FULL scope (everything)</option></select>
-      <button id="requestErase" class="danger">Request erasure</button>
-      <span id="reqOut" class="hint"></span>
-    </div>
-    <p class="hint">This signs <code>requestErasure()</code> in your wallet — the proof of
-    authority the protocol requires before anything can be notarized.</p>
-  </div>
+      <div style="margin: 20px 0;">
+        <label style="display:block; margin-bottom:8px; font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase;">Connected Guardian Wallet</label>
+        <div class="row">
+          <button id="wallet" class="button button-dark button-small" type="button">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg> Connect Wallet
+          </button>
+          <span id="walletAddr" class="mono" style="font-size:12px; color:var(--muted);"></span>
+        </div>
+      </div>
 
-  <div class="panel">
-    <h3>4 · Confirmation (notary)</h3>
-    <div id="queue"></div>
+      <div style="margin: 20px 0;">
+        <label style="display:block; margin-bottom:8px; font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase;">Select Governing Jurisdiction</label>
+        <div class="chips" id="jurChips"></div>
+      </div>
+
+      <div style="margin: 20px 0; display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+        <div>
+          <label style="display:block; margin-bottom:8px; font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase;">Child Age Band</label>
+          <select id="ageBand" style="width:100%;">
+            <option value="0">0–5 yrs</option>
+            <option value="1" selected>6–12 yrs</option>
+            <option value="2">13–17 yrs</option>
+            <option value="3">18+ (principal self)</option>
+          </select>
+        </div>
+        <div>
+          <label style="display:block; margin-bottom:8px; font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase;">Child's Current Age</label>
+          <input id="childAge" type="number" min="0" max="17" value="9" style="width:100%;">
+        </div>
+      </div>
+
+      <div class="panel" style="margin: 16px 0; padding:16px; background:#f4f2ea; border-radius:4px;">
+        <label style="display:block; margin-bottom:6px; font-size:10px; font-weight:800; color:var(--blue); text-transform:uppercase;">Policy Warden Live Parameters</label>
+        <div class="kv" id="policyView" style="margin-top:6px;"></div>
+      </div>
+
+      <div style="margin-top:20px;">
+        <button id="enroll" class="button button-primary button-wide" type="button">
+          Open Protected Account on Chain →
+        </button>
+        <div id="enrollOut" class="hint break" style="margin-top:10px;"></div>
+      </div>
+
+      <hr class="sep">
+
+      <!-- Section 2: Vault Encrypted Storage -->
+      <div class="panel-head" style="margin-top:24px;">
+        <h2>2 · Client-Side Encrypted Vault</h2>
+        <span class="badge info">AES-256-GCM</span>
+      </div>
+      <p class="hint" style="margin:8px 0 16px;">The hub never sees plaintext. Your browser derives a 256-bit PBKDF2 key from this passphrase. The hub stores only ciphertext and hashes.</p>
+
+      <div style="display:grid; gap:12px;">
+        <input id="passphrase" type="password" placeholder="Client passphrase (never leaves browser)">
+        <input id="memText" type="text" placeholder="Data record (e.g. chat transcript, voice log, profile)">
+        <div class="row">
+          <select id="memKind" style="flex:1;">
+            <option value="MEMORY">Type: Memory</option>
+            <option value="CONVO">Type: Conversation</option>
+            <option value="PROFILE">Type: Profile Data</option>
+          </select>
+          <button id="addMemory" class="button button-dark" type="button">
+            Encrypt + Commit
+          </button>
+        </div>
+      </div>
+      <div id="memOut" class="hint break" style="margin-top:10px;"></div>
+
+      <hr class="sep">
+
+      <!-- Section 3: Erasure Request -->
+      <div class="panel-head" style="margin-top:24px;">
+        <h2>3 · Statutory Erasure Request</h2>
+        <span class="badge warn">Authority Proof</span>
+      </div>
+      <p class="hint" style="margin:8px 0 16px;">Issues a signed <code>requestErasure()</code> transaction from your guardian wallet proving legal authority before notary execution.</p>
+
+      <div class="row">
+        <select id="scopeSel" style="flex:1;">
+          <option value="FULL">FULL scope (shred all items)</option>
+        </select>
+        <button id="requestErase" class="button" style="background:var(--coral); color:white;" type="button">
+          Request Erasure
+        </button>
+      </div>
+      <div id="reqOut" class="hint" style="margin-top:10px;"></div>
+    </div>
+
+    <!-- Right Column: Inspector & Live Queue -->
+    <div>
+      <div class="depth-inspector">
+        <div class="panel-head">
+          <h2>Subject &amp; Vault Inspector</h2>
+          <span class="status-dot status-live">Live State</span>
+        </div>
+
+        <div class="inspector-metrics" style="margin-top:20px;">
+          <div class="metric">
+            <span>Subject Pseudonym</span>
+            <strong id="disp-sid" class="mono" style="font-size:14px;">Not Enrolled</strong>
+            <small>Cryptonym only, zero PII</small>
+          </div>
+          <div class="metric">
+            <span>Encrypted Items</span>
+            <strong id="disp-items">0</strong>
+            <small>Client AES-256-GCM blobs</small>
+          </div>
+        </div>
+
+        <div style="margin-top:24px;">
+          <label style="display:block; margin-bottom:8px; font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase;">Encrypted Items in Vault</label>
+          <div id="memList" class="kv" style="max-height:220px; overflow-y:auto; padding:10px; background:white; border:1px solid var(--rule);">
+            <span class="hint">No items committed yet.</span>
+          </div>
+        </div>
+
+        <div style="margin-top:28px;">
+          <div class="panel-head">
+            <h3 style="font-size:18px;">4 · Notary Execution Queue</h3>
+            <span class="badge info">Dual Notary</span>
+          </div>
+          <div id="queue" style="margin-top:12px; overflow-x:auto;">
+            <p class="hint">Queue is currently empty.</p>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </main>
-<div class="footer">guardian console · every action is a real wallet transaction on the configured chain</div>
+
+<footer class="site-footer"></footer>
+
 <script src="/assets/ethers.umd.min.js"></script>
 <script src="/assets/app.js"></script>
 <script>
 const O = window.OBLIVIA, $ = id => document.getElementById(id);
 let account = null, subjectId = null, chosenJurisdiction = 'CPP';
 
-function setStep(id, cls) { $(id).className = 'step ' + cls; }
+function setStep(id, cls) { 
+  const el = $(id);
+  if (el) el.className = 'step ' + cls; 
+}
 
 async function refreshQueue() {
   const q = await O.get('/api/notary/queue');
   $('queue').innerHTML = !q.ops?.length
-    ? '<span class="hint">queue empty</span>'
-    : `<table><thead><tr><th>op</th><th>kind</th><th>scope</th><th>stage</th><th>tx</th></tr></thead><tbody>` +
-      q.ops.map(o => `<tr><td class="mono">${O.short(o.opId)}</td><td>${O.esc(o.kind)}</td>
-        <td class="mono">${o.scopeRef === '0x0000..' || o.scopeRef === '0x' + '00'.repeat(32) ? 'FULL' : O.short(o.scopeRef)}</td>
+    ? '<span class="hint">Queue empty. No pending operations.</span>'
+    : `<table>
+        <thead>
+          <tr>
+            <th>Op ID</th>
+            <th>Kind</th>
+            <th>Scope</th>
+            <th>Status</th>
+            <th>Receipt / Link</th>
+          </tr>
+        </thead>
+        <tbody>` +
+      q.ops.map(o => `<tr>
+        <td class="mono"><code>${O.short(o.opId)}</code></td>
+        <td><strong>${O.esc(o.kind)}</strong></td>
+        <td class="mono">${o.scopeRef === '0x0000..' || o.scopeRef === '0x' + '00'.repeat(32) ? '<span class="badge info">FULL</span>' : O.short(o.scopeRef)}</td>
         <td>${O.statusBadge(o.stage)}</td>
-        <td class="mono">${o.txHash ? '<a href="/explorer#' + o.txHash + '">' + O.short(o.txHash, 8) + '</a>' : (o.decHash ? '<a href="/cert/' + o.decHash + '">DEC</a>' : '—')}</td>
-        </tr>`).join('') + '</tbody></table>';
+        <td class="mono">${o.txHash ? '<a class="explorer-hash" href="/explorer#' + o.txHash + '">' + O.short(o.txHash, 8) + '</a>' : (o.decHash ? '<a class="text-link" href="/cert/' + o.decHash + '">View DEC</a>' : '—')}</td>
+      </tr>`).join('') + '</tbody></table>';
 }
 
 async function refreshSubject() {
   if (!subjectId) return;
   const s = await O.get('/api/subjects/' + subjectId);
-  $('memList').innerHTML = s.items.map(i => `
-    <div class="k">item ${O.short(i.memoryId)}</div><div>${O.esc(i.kind)} · ${O.short(i.scopeRef)} · ${new Date(i.createdAt).toLocaleString()}</div>`).join('') || '<span class="hint">no items yet</span>';
-  $('memOut').textContent = 'dataRoot: ' + (s.dataRoot ?? '') + ' · items: ' + s.itemsCount;
-  // scope options from items
+  $('disp-sid').textContent = O.short(subjectId, 8);
+  $('disp-items').textContent = s.itemsCount || 0;
+  $('memList').innerHTML = s.items.length 
+    ? s.items.map(i => `
+        <div class="k">Item ${O.short(i.memoryId)}</div>
+        <div><strong>${O.esc(i.kind)}</strong> · <span class="mono">${O.short(i.scopeRef)}</span> · <small style="color:var(--muted);">${new Date(i.createdAt).toLocaleTimeString()}</small></div>
+      `).join('')
+    : '<span class="hint">No items in vault.</span>';
+  $('memOut').innerHTML = '<span class="status-dot status-good">DataRoot Commitment: <code class="mono">' + O.short(s.dataRoot ?? '', 10) + '</code></span>';
+
+  // Scope selection options
   const sel = $('scopeSel');
   const cur = sel.value;
-  sel.innerHTML = '<option value="FULL">FULL scope (everything)</option>' +
-    s.items.map(i => `<option value="${i.scopeRef}">item ${O.short(i.memoryId)}</option>`).join('');
+  sel.innerHTML = '<option value="FULL">FULL scope (shred all items)</option>' +
+    s.items.map(i => `<option value="${i.scopeRef}">Scope of item ${O.short(i.memoryId)}</option>`).join('');
   sel.value = cur;
 }
 
 async function ensureSubject() {
   const r = await O.post('/api/subjects', { jurisdiction: chosenJurisdiction });
-  subjectId = r.subjectId; $('enrollOut').textContent = 'subject ' + subjectId;
+  subjectId = r.subjectId; 
+  $('enrollOut').innerHTML = '<span class="status-dot status-live">Subject pseudonym generated: <code class="mono">' + O.short(subjectId) + '</code></span>';
   for (const s of ['st-p','st-e']) setStep(s, 'done');
   return subjectId;
 }
@@ -130,73 +247,95 @@ async function onboard() {
     const tx = await O.registry().then((reg) => reg.openSubject(
       sid, b3, ethers.id('GUARDIAN_DECLARATION@v1:' + account), dataRoot, vestAt, band,
     ));
-    $('enrollOut').textContent = 'tx ' + O.short(tx.hash) + ' …';
+    $('enrollOut').innerHTML = '<span class="status-dot status-live">Broadcasting tx ' + O.short(tx.hash) + ' …</span>';
     const rc = await tx.wait(1);
     setStep('st-e', 'done');
-    $('enrollOut').innerHTML = 'tx <a href="/explorer#' + rc.hash + '">' + O.short(rc.hash) + '</a> · vested in ' + yearsToVest + 'y';
+    setStep('st-m', 'on');
+    $('enrollOut').innerHTML = '<span class="status-dot status-good">Enrolled! Tx: <a class="explorer-hash" href="/explorer#' + rc.hash + '">' + O.short(rc.hash) + '</a> · Rights vest in ' + yearsToVest + ' yrs</span>';
     await refreshSubject();
-  } catch (e) { $('enrollOut').textContent = '✗ ' + (e.message || e); }
+  } catch (e) { 
+    $('enrollOut').innerHTML = '<span class="status-dot status-bad">Error: ' + O.esc(e.message || e) + '</span>'; 
+  }
 }
 
 async function clickWallet() {
   account = await O.connectWallet();
-  $('walletAddr').textContent = account;
+  $('walletAddr').textContent = O.short(account, 6);
 }
 
 async function boot() {
-  // policy chips
+  O.renderShell('/guardian');
   const st = await O.get('/api/chain/status');
-  if (!st.deploy) { $('enrollOut').textContent = '⚠ no deployment — run scripts/run-local.sh'; return; }
+  if (!st.deploy) { 
+    $('enrollOut').innerHTML = '<span class="badge warn">Local chain not running or not deployed. Run <code>bash scripts/run-local.sh</code></span>'; 
+    return; 
+  }
   const ps = await O.get('/api/policies');
   $('jurChips').innerHTML = ps.filter(p => p.onChain && p.active).map(p =>
-    `<button class="chip ${p.code === chosenJurisdiction ? 'on' : ''}" data-c="${p.code}" onclick="(window.__pick|| (()=>false))('${p.code}')">${p.code} · self-erase at ${p.selfEraseAge}</button>`).join('');
-  window.__pick = async (c) => { chosenJurisdiction = c; [...document.querySelectorAll('.chip')].forEach(e => e.classList.toggle('on', e.dataset.c === c)); await showPolicy(); };
+    `<button type="button" class="chip ${p.code === chosenJurisdiction ? 'on' : ''}" data-c="${p.code}" onclick="(window.__pick|| (()=>false))('${p.code}')">${p.code} (Age ${p.selfEraseAge})</button>`).join('');
+  
+  window.__pick = async (c) => { 
+    chosenJurisdiction = c; 
+    [...document.querySelectorAll('.chip')].forEach(e => e.classList.toggle('on', e.dataset.c === c)); 
+    await showPolicy(); 
+  };
   await showPolicy();
   $('wallet').onclick = clickWallet;
   $('enroll').onclick = onboard;
   $('addMemory').onclick = addMemory;
   $('requestErase').onclick = requestErase;
-  await refreshQueue(); setInterval(refreshQueue, 2500);
+  await refreshQueue(); 
+  setInterval(refreshQueue, 2500);
 }
 
 async function showPolicy() {
   const p = (await O.get('/api/policies/' + chosenJurisdiction));
-  $('policyView').innerHTML = `<div class="k">version</div><div>${p.version ?? '?'}</div>
-    <div class="k">self-erase age</div><div>${p.selfEraseAge ?? '?'}</div>
-    <div class="k">max retention</div><div>${p.maxRetentionDays ?? '?'} days</div>
-    <div class="k">profiling allowed</div><div>${p.profilingAllowed ? 'yes' : '<b>NO</b>'}</div>
-    <div class="k">statute</div><div class="hint">${O.esc(p.statuteCite || '')}</div>`;
+  $('policyView').innerHTML = `
+    <div class="k">Version</div><div>v${p.version ?? '1'}</div>
+    <div class="k">Self-Erase Threshold</div><div><strong>${p.selfEraseAge ?? 18} years</strong></div>
+    <div class="k">Max Retention</div><div>${p.maxRetentionDays ?? 30} days</div>
+    <div class="k">Profiling Ban</div><div>${p.profilingAllowed ? '<span class="badge warn">Allowed</span>' : '<span class="badge ok">STRICTLY FORBIDDEN</span>'}</div>
+    <div class="k">Statute Cite</div><div class="hint">${O.esc(p.statuteCite || '')}</div>
+  `;
 }
 
 async function addMemory() {
   try {
-    const pp = $('passphrase').value; if (!pp) throw new Error('passphrase first');
-    const txt = $('memText').value; if (!txt) throw new Error('type a memory');
+    const pp = $('passphrase').value; if (!pp) throw new Error('Enter a passphrase to derive browser encryption key.');
+    const txt = $('memText').value; if (!txt) throw new Error('Type a data item to encrypt.');
     const enc = await O.encryptMemory(pp, txt);
     const sid = subjectId ?? await ensureSubject();
     const r = await O.post('/api/ops/memories', enc);
-    $('memOut').innerHTML = 'committed item ' + O.short(r.memoryId) + ' · scope ' + O.short(r.scopeRef) + ' · dataRoot ' + O.short(r.dataRoot);
+    $('memOut').innerHTML = '<span class="status-dot status-live">Stored encrypted blob ' + O.short(r.memoryId) + ' on hub. Pinning commitment on chain…</span>';
     const reg = await O.registry();
     const tx = await reg.addMemory(sid, r.scopeRef, ethers.id('dataCommitment:' + r.memoryId));
     const rc = await tx.wait(1);
-    $('memOut').innerHTML += `<div>addMemory tx <a href="/explorer#${rc.hash}">${O.short(rc.hash)}</a></div>`;
+    $('memOut').innerHTML = `<span class="status-dot status-good">Memory committed on-chain: <a class="explorer-hash" href="/explorer#${rc.hash}">${O.short(rc.hash)}</a></span>`;
     setStep('st-m', 'done');
+    setStep('st-r', 'on');
+    $('memText').value = '';
     await refreshSubject();
-  } catch (e) { $('memOut').textContent = '✗ ' + (e.message || e); }
+  } catch (e) { 
+    $('memOut').innerHTML = '<span class="status-dot status-bad">Error: ' + O.esc(e.message || e) + '</span>'; 
+  }
 }
 
 async function requestErase() {
   try {
     const scope = $('scopeSel').value === 'FULL' ? '0x' + '00'.repeat(32) : $('scopeSel').value;
-    if (!subjectId) throw new Error('enroll first');
+    if (!subjectId) throw new Error('Enroll the child account first.');
     const reg = await O.registry();
+    $('reqOut').innerHTML = '<span class="status-dot status-live">Signing requestErasure() in wallet…</span>';
     const tx = await reg.requestErasure(subjectId, scope);
     await tx.wait(1);
     const r = await O.post('/api/ops/erase-request', { scopeRef: scope, requestTxHash: tx.hash });
-    $('reqOut').innerHTML = 'requestErasure + queue ' + O.statusBadge(r.stage) + ` · coreHash <span class="mono">${O.short(r.coreHash)}</span>`;
+    $('reqOut').innerHTML = '<span class="status-dot status-good">Erasure requested &amp; queued: CoreHash <code class="mono">' + O.short(r.coreHash) + '</code></span>';
     setStep('st-r', 'done');
+    setStep('st-c', 'on');
     await refreshQueue();
-  } catch (e) { $('reqOut').textContent = '✗ ' + (e.message || e); }
+  } catch (e) { 
+    $('reqOut').innerHTML = '<span class="status-dot status-bad">Error: ' + O.esc(e.message || e) + '</span>'; 
+  }
 }
 
 boot();

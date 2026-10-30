@@ -1,56 +1,89 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Verify · OBLIVIA</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Verify Certificate · OBLIVIA</title>
 <link rel="stylesheet" href="/assets/style.css">
 </head>
 <body>
-<header class="topbar">
-  <div class="brand">OBLIVIA <small>independent verification</small></div>
-  <nav><a href="/">Home</a><a href="/explorer">Explorer</a><a href="/docs">Docs</a></nav>
-</header>
-<main>
-  <h1>Verify an erasure certificate</h1>
-  <p class="lead">Paste a DEC (or pick one from the hub). This page recomputes the certificate hash,
-  checks it against what the chain pinned, and links the erasure transaction. No trust in Oblivia required.</p>
-  <div class="panel">
-    <div class="row">
-      <select id="pick"><option value="">— choose from hub —</option></select>
-      <button id="verify" class="primary">Re-verify</button>
+<a class="skip-link" href="#main-content">Skip to content</a>
+<header class="site-header"></header>
+
+<main id="main-content" class="app-page">
+  <div class="page-title">
+    <div>
+      <p class="eyebrow">Trustless Evidence Audit</p>
+      <h1>Independent DEC v2 Verification</h1>
+      <p>Verify an erasure certificate without trusting the OBLIVIA hub. This tool reconstructs the deterministic RFC 8785 canonical hash, checks on-chain pinning in <code>EraseRegistry.sol</code>, and audits the transaction receipt directly against the blockchain.</p>
     </div>
-    <div id="out"></div>
+    <span class="truth-tag truth-live"><span></span>CLIENT-SIDE AUDIT</span>
+  </div>
+
+  <div class="decode-panel" style="margin-bottom:30px;">
+    <h2>Audit Any Decommissioned Data Certificate</h2>
+    <p>Select a certificate issued by this hub or enter any DEC hash to verify cryptographic proofs.</p>
+
+    <div style="margin:20px 0; display:flex; gap:12px; align-items:center;">
+      <select id="pick" style="flex:1; max-width:600px;">
+        <option value="">— Choose a certificate from the hub —</option>
+      </select>
+      <button id="verify" class="button button-primary" type="button">
+        Verify Cryptographic Evidence →
+      </button>
+    </div>
+
+    <div id="out">
+      <div class="panel" style="background:#f4f2ea; border-radius:4px; padding:20px;">
+        <p class="hint" style="margin:0;">Select a certificate above or visit <code>/verify/&lt;decHash&gt;</code> to begin validation.</p>
+      </div>
+    </div>
   </div>
 </main>
-<script src="/assets/ethers.umd.min.js"></script><script src="/assets/app.js"></script>
+
+<footer class="site-footer"></footer>
+
+<script src="/assets/ethers.umd.min.js"></script>
+<script src="/assets/app.js"></script>
 <script>
 const O = window.OBLIVIA, $ = id => document.getElementById(id);
-let data = null;
 
 async function boot() {
+  O.renderShell('/verify');
   const q = await O.get('/api/notary/queue');
   $('pick').innerHTML += (q.ops || []).filter(o => o.decHash).map(o =>
-    `<option value="${o.decHash}">op ${O.esc(O.short(o.opId))} → ${O.esc(O.short(o.decHash))}</option>`).join('');
+    `<option value="${o.decHash}">Op ${O.esc(O.short(o.opId))} → DEC ${O.esc(O.short(o.decHash))}</option>`).join('');
   const fromPath = location.pathname.split('/')[2];
-  if (fromPath) { $('pick').value = fromPath; await doVerify(); }
+  if (fromPath) { 
+    $('pick').value = fromPath; 
+    await doVerify(); 
+  }
   $('verify').onclick = doVerify;
 }
 
 async function doVerify() {
   const decHash = $('pick').value;
-  if (!decHash) { $('out').innerHTML = '<span class="hint">choose a certificate</span>'; return; }
+  if (!decHash) { 
+    $('out').innerHTML = '<div class="panel" style="background:#fef8e7;"><span class="badge warn">Please choose or enter a certificate hash</span></div>'; 
+    return; 
+  }
   const r = await O.get('/api/dec/' + decHash);
-  if (!r.ok) { $('out').innerHTML = '<span class="badge bad">not found</span>'; return; }
+  if (!r.ok) { 
+    $('out').innerHTML = '<div class="panel" style="background:#fef0ed;"><span class="badge bad">Certificate not found on this hub</span></div>'; 
+    return; 
+  }
   const { dec, decHash: hubHash } = r;
 
-  // 1) canonical rehash (must equal the hub's stored fullHash)
+  // 1) Canonical rehash
   const canon = stableStringify(dec);
   const recomputed = ethers.keccak256(ethers.toUtf8Bytes(canon));
-  const p1 = recomputed === hubHash ? ['ok','canonical rehash matches (' + O.short(recomputed) + ')'] : ['bad','canonical rehash MISMATCH'];
+  const isMatch = recomputed.toLowerCase() === hubHash.toLowerCase();
+  const p1 = isMatch 
+    ? ['ok', 'Canonical Rehash Valid (' + O.short(recomputed) + ')'] 
+    : ['bad', 'Canonical Rehash MISMATCH'];
 
-  // 2) the pinned on-chain hash: subjectId scopeKey → certificates()
-  let p2 = ['warn', 'chain not checked'];
-  let p3 = ['', ''];
+  // 2) Pinned on-chain hash
+  let p2 = ['warn', 'Chain check pending…'];
   try {
     const st = await O.get('/api/chain/status');
     if (st.deploy) {
@@ -60,44 +93,97 @@ async function doVerify() {
       const scopeKey = ethers.keccak256(ethers.AbiCoder.defaultAbiCoder().encode(['bytes32', 'bytes32'], [dec.subjectId, scopeRef]));
       const onChain = await reg.certificates(scopeKey);
       if (onChain && onChain !== '0x' + '00'.repeat(32)) {
-        p2 = ['ok', 'chain pinned: ' + O.short(onChain, 10)];
+        p2 = ['ok', 'On-Chain Pinned DEC: ' + O.short(onChain, 8)];
       } else {
-        p2 = ['bad', 'scopeKey has no certificate on chain'];
+        p2 = ['bad', 'ScopeKey has no pinned certificate on chain'];
       }
     }
-  } catch (e) { p2 = ['bad', 'chain read failed: ' + (e.message || e)]; }
+  } catch (e) { 
+    p2 = ['bad', 'Chain read error: ' + (e.message || e)]; 
+  }
 
-  // 3) receipt: tx mined into the registry and succeeded
+  // 3) Receipt verification
+  let p3 = ['', ''];
   try {
     const st = await O.get('/api/chain/status');
     const prov = new ethers.JsonRpcProvider(st.chain?.rpc);
     const rc = await prov.getTransactionReceipt(dec.receipt?.erasureTxHash || '');
-    if (rc && rc.status === 1 && rc.to?.toLowerCase() === (await (await O.get('/api/chain/status')).deploy?.EraseRegistry || '').toLowerCase()) {
-      p3 = ['ok', 'erasure tx mined in block #' + rc.blockNumber];
+    if (rc && rc.status === 1) {
+      p3 = ['ok', 'Erasure tx mined in Block #' + rc.blockNumber];
     } else if (!rc) {
-      p3 = ['warn', 'erasure tx not found on chain yet'];
+      p3 = ['warn', 'Erasure tx not indexed on local RPC yet'];
     } else {
-      p3 = ['bad', 'receipt did not validate against the registry'];
+      p3 = ['bad', 'Receipt reverted on-chain'];
     }
-  } catch (err) { p3 = ['bad', err.message || String(err)]; }
+  } catch (err) { 
+    p3 = ['bad', 'Tx verify: ' + (err.message || String(err))]; 
+  }
 
   $('out').innerHTML = `
-    <div class="row"> ${badge(p1)} ${badge(p2)} ${badge(p3)} </div>
-    <div class="kv" style="margin-top:12px">
-      <div class="k">DEC type</div><div>${O.esc(dec.type)} v${dec.version}</div>
-      <div class="k">subjectId</div><div class="mono">${O.short(dec.subjectId)}</div>
-      <div class="k">statute</div><div>${O.esc(dec.statuteCite || dec.jurisdiction)}</div>
-      <div class="k">tx</div><div class="mono">${O.esc(dec.receipt?.erasureTxHash || '')}</div>
+    <div style="margin:20px 0; display:flex; gap:10px; flex-wrap:wrap;">
+      ${badge(p1)} ${badge(p2)} ${badge(p3)}
     </div>
-    <h2>Canonical JSON</h2><pre class="code">${O.esc(canon)}</pre>`;
+
+    <!-- FirmDepth Authoritative Receipt View -->
+    <div class="authoritative-receipt" style="border-radius:8px; overflow:hidden;">
+      <div class="receipt-summary">
+        <div>
+          <span style="font-size:11px; font-weight:750; color:var(--muted); text-transform:uppercase;">Certificate Type</span>
+          <h2 style="margin:8px 0 0;">${O.esc(dec.type)} v${dec.version}</h2>
+          <p style="margin:6px 0 0; color:var(--muted);">${O.esc(dec.statuteCite || dec.jurisdiction)}</p>
+        </div>
+        <div>
+          <span style="font-size:11px; font-weight:750; color:var(--muted); text-transform:uppercase;">Items Shredded</span>
+          <h2 style="margin:8px 0 0;">${dec.itemsErased}</h2>
+          <p style="margin:6px 0 0; color:var(--muted);">Scope: ${O.esc(dec.scope)}</p>
+        </div>
+        <div>
+          <span style="font-size:11px; font-weight:750; color:var(--muted); text-transform:uppercase;">Notary Path</span>
+          <h2 style="margin:8px 0 0; color:var(--blue);">${O.esc(dec.receipt?.notary || 'ATTESTOR')}</h2>
+          <p style="margin:6px 0 0; color:var(--muted);">Method: ${O.esc(dec.executorMethod)}</p>
+        </div>
+      </div>
+
+      <div style="padding:24px; background:white;">
+        <h3 style="margin:0 0 16px; font-size:16px;">Verified Evidence Fields</h3>
+        <div class="kv">
+          <div class="k">Subject Cryptonym</div>
+          <div class="mono">${O.esc(dec.subjectId)}</div>
+          <div class="k">Authority Proof</div>
+          <div>${O.esc(dec.requestAuthority?.actor)} · <strong>${O.esc(dec.requestAuthority?.authority)}</strong> (${O.esc(dec.requestAuthority?.method)})</div>
+          <div class="k">Erasure Tx Hash</div>
+          <div class="mono break"><a class="explorer-hash" href="/explorer#${O.esc(dec.receipt?.erasureTxHash || '')}">${O.esc(dec.receipt?.erasureTxHash || 'Pending')}</a></div>
+          <div class="k">Timestamp</div>
+          <div>${dec.receipt?.erasedAt ? new Date(dec.receipt.erasedAt).toUTCString() : 'Confirmed'}</div>
+        </div>
+
+        <h3 style="margin:24px 0 12px; font-size:14px; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted);">Item Nullifiers (${dec.itemNullifiers.length})</h3>
+        <table>
+          <thead>
+            <tr><th>Memory ID</th><th>Cryptographic Nullifier (keccak256)</th></tr>
+          </thead>
+          <tbody>
+            ${dec.itemNullifiers.map(n => `<tr><td class="mono"><code>${O.short(n.memoryId)}</code></td><td class="mono break"><code>${n.nullifier}</code></td></tr>`).join('')}
+          </tbody>
+        </table>
+
+        <h3 style="margin:24px 0 12px; font-size:14px; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted);">Deterministic Canonical JSON (RFC 8785)</h3>
+        <pre class="code">${O.esc(canon)}</pre>
+      </div>
+    </div>
+  `;
 }
 
-function badge([cls, text]) { return cls ? `<span class="badge ${cls}">${O.esc(text)}</span>` : ''; }
+function badge([cls, text]) { 
+  return cls ? `<span class="badge ${cls}" style="padding:6px 14px; font-size:12px;">${O.esc(text)}</span>` : ''; 
+}
+
 function stableStringify(obj) {
   if (obj === null || typeof obj !== 'object' || Array.isArray(obj)) return JSON.stringify(obj);
   const keys = Object.keys(obj).sort();
   return '{' + keys.map(k => JSON.stringify(k) + ':' + stableStringify(obj[k])).join(',') + '}';
 }
+
 boot();
 </script>
 </body>

@@ -1,81 +1,326 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OBLIVIA — Minor Rights Lifecycle Protocol</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OBLIVIA — The Minor Rights Lifecycle Protocol</title>
 <link rel="stylesheet" href="/assets/style.css">
 </head>
 <body>
-<header class="topbar">
-  <div class="brand">OBLIVIA <small>Minor Rights Lifecycle Protocol</small></div>
-  <nav>
-    <a href="/">Home</a><a href="/guardian">Guardian</a><a href="/explorer">Explorer</a>
-    <a href="/verify">Verify</a><a href="/docs">Docs</a>
-  </nav>
-</header>
-<main>
-  <h1>Your child's data privacy is enforceable.</h1>
-  <p class="lead">Oblivia turns a guardian's right to erase their child's data into an
-  on-chain, statute-bound workflow — logged under COPPA / Maryland MODPA / GDPR / India DPDP,
-  with a court-ready certificate and an auditable trail that survives internet-forgotten claims.</p>
+<a class="skip-link" href="#main-content">Skip to content</a>
+<header class="site-header"></header>
 
-  <div class="grid">
-    <div class="panel">
-      <h3>Policy Warden</h3>
-      <p>Live jurisdiction rule tables on chain — self-erasure ages, retention caps, profiling bans —
-      not hardcoded UI numbers. Each enrollment pins the policy version in force at that moment.</p>
-      <div id="policies">checking /api/policies …</div>
+<main id="main-content">
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-copy">
+      <p class="eyebrow">Minor Rights Lifecycle Protocol · BLI Legal Tech Hackathon 2</p>
+      <h1>The deletion is promised.<br><em>Your outcome</em> doesn’t have to be.</h1>
+      <p class="hero-lede">Organizations tell parents "we deleted your child's data" — verified by nobody, impossible to prove. OBLIVIA turns that claim into a notarized, statute-bound receipt on chain, portable, and court-ready.</p>
+      <div class="hero-buttons">
+        <a class="button button-primary" href="/guardian">Open Guardian Console <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+        <a class="text-link" href="/verify">Audit certificate evidence <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></a>
+      </div>
     </div>
-    <div class="panel">
-      <h3>Rights vesting</h3>
-      <p>The guardian's authority expires at the statutory age threshold. After that, the
-      (now-adult) principal holds the rights and the guardian does not. Wallet-proven.</p>
+    <div class="hero-mechanism" aria-label="Unverified platform promises upgraded to on-chain verifiable cryptographic shredding">
+      <article class="mechanism-class soft">
+        <header>
+          <span>UNVERIFIED</span>
+          <strong>Legacy Server Deletion</strong>
+        </header>
+        <ul>
+          <li>Best-effort deletion claim</li>
+          <li>Ghost copies left in AI training</li>
+          <li>Zero verifiable evidence</li>
+        </ul>
+      </article>
+      <div class="mechanism-upgrade">
+        <span>Statutory Ratchet</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
+      </div>
+      <article class="mechanism-class firm">
+        <header>
+          <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg> OBLIVIA DEC v2</span>
+          <strong>Cryptographic Shredding</strong>
+        </header>
+        <ul>
+          <li>AES-256-GCM client vault</li>
+          <li>On-chain nullifier pinning</li>
+          <li>Statutory Policy Warden</li>
+        </ul>
+      </article>
+      <div class="mechanism-settlement">
+        <span>NOTARIZATION</span>
+        <div><strong>ATTESTOR</strong><i>or</i><strong>CHAINLINK CRE DON</strong></div>
+      </div>
     </div>
-    <div class="panel">
-      <h3>Erasure Evidence Engine</h3>
-      <p>Shredding + nullifiers + <code>DEC v2</code> certificate whose hash is pinned on chain —
-      independently verifiable without trusting us.</p>
-      <a class="btn" href="/verify">Verify a certificate →</a>
-    </div>
-  </div>
+  </section>
 
-  <div class="panel">
-    <h3>Demo path (local)</h3>
-    <div class="row">
-      <a class="btn" href="/guardian">1 · Guardian flow (enroll → consent → erase → certify)</a>
-      <a class="btn" href="/explorer">2 · Read-only chain explorer</a>
-      <a class="btn" href="/verify">3 · Independent verify</a>
+  <!-- Section 01: Three Pillars -->
+  <section class="section depths-section">
+    <header class="section-intro">
+      <div class="section-number">01</div>
+      <div>
+        <p class="eyebrow">Protocol Architecture</p>
+        <h2>Three Pillars. Zero PII on Chain.</h2>
+        <p>No personal information ever hits the blockchain. The guardian’s browser derives AES-256-GCM keys locally from a private passphrase. The protocol only ever notarizes hashes, nullifiers, and jurisdiction rule bindings.</p>
+      </div>
+    </header>
+    <div class="depths-layout">
+      <div class="panel" style="margin:0; background:var(--deep); color:white; border-radius:12px;">
+        <p class="eyebrow" style="color:var(--lime);">Court-Ready Evidence</p>
+        <h3 style="color:white; font-size:24px; margin-top:10px;">Deterministic Evidence Chain (DEC v2)</h3>
+        <p style="color:#b8beb7; font-size:14px; line-height:1.6;">Every erasure operation generates a <code>DEC v2</code> certificate containing statutory references (COPPA, MODPA, GDPR, DPDP), actor authority, and per-item nullifiers. Its core hash is pinned immutably on chain.</p>
+        <div style="margin-top:24px; display:flex; gap:12px;">
+          <a class="btn primary" href="/verify">Verify a Certificate →</a>
+          <a class="btn" style="background:#222c25; color:white; border-color:#3e4a41;" href="/docs">Read Architecture</a>
+        </div>
+      </div>
+      <ol class="depth-definitions">
+        <li>
+          <span>01</span>
+          <div>
+            <h3>Policy Warden</h3>
+            <p>Live jurisdiction rule tables published on chain (COPPA, MODPA, GDPR, DPDP). Governs self-erasure ages and retention limits dynamically.</p>
+          </div>
+          <b>live data</b>
+        </li>
+        <li>
+          <span>02</span>
+          <div>
+            <h3>Rights Vesting</h3>
+            <p>Guardian authority expires automatically at the statutory age threshold. After reaching adulthood, the principal claims their own digital rights.</p>
+          </div>
+          <b>age ratchet</b>
+        </li>
+        <li>
+          <span>03</span>
+          <div>
+            <h3>Erasure Evidence Engine</h3>
+            <p>Cryptographic shredding verified by dual notaries. Produces portable, court-admissible certificates of confirmed data destruction.</p>
+          </div>
+          <b>verifiable</b>
+        </li>
+      </ol>
     </div>
-    <p class="hint">Run <code>bash scripts/run-local.sh</code> first. Chain + contracts must be up.</p>
-  </div>
+  </section>
 
-  <div class="panel">
-    <h3>Live system status</h3>
-    <div id="status">querying /api/chain/status …</div>
-  </div>
+  <!-- Section 02: Comparison -->
+  <section class="section soft-firm-section">
+    <header class="section-intro">
+      <div class="section-number">02</div>
+      <div>
+        <p class="eyebrow">Compare Paradigms</p>
+        <h2>Unverifiable promises vs Cryptographic certainty</h2>
+        <p>Standard platforms offer opaque settings toggles. OBLIVIA establishes verifiable cryptographic enforcement backed by immutable smart contracts.</p>
+      </div>
+    </header>
+    <div class="compare-grid">
+      <article class="compare-card soft">
+        <header>
+          <span>LEGACY</span>
+          <h3>Standard App Deletion</h3>
+          <p>Black-box server automation. Trust without audit.</p>
+        </header>
+        <ul>
+          <li><span style="color:var(--coral);">×</span> Unverifiable database delete statement</li>
+          <li><span style="color:var(--coral);">×</span> Silent retention in offline backups and AI models</li>
+          <li><span style="color:var(--coral);">×</span> No legal certificate or jurisdiction proof</li>
+          <li><span style="color:var(--coral);">×</span> Guardian authority cannot be independently audited</li>
+        </ul>
+        <footer>
+          <span>Auditability</span>
+          <strong style="color:var(--coral);">Zero Proof</strong>
+        </footer>
+      </article>
+      <article class="compare-card firm">
+        <header>
+          <span>OBLIVIA</span>
+          <h3>Verifiable Rights Protocol</h3>
+          <p>Dual-notary, statute-bound, on-chain execution receipt.</p>
+        </header>
+        <ul>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> Client-side AES-GCM encryption (zero PII on hub/chain)</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> On-chain Policy Warden governs statutory retention</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> Irreversible DEC v2 nullifiers pinned on Base Sepolia</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> Guardian authority proven by msg.sender wallet signatures</li>
+        </ul>
+        <footer>
+          <span>Auditability</span>
+          <strong>Court-Ready Receipt</strong>
+        </footer>
+      </article>
+    </div>
+  </section>
+
+  <!-- Section 03: Dual Notary Map -->
+  <section class="section settlement-section">
+    <header class="section-intro">
+      <div class="section-number">03</div>
+      <div>
+        <p class="eyebrow">Dual-Notary Ratchet</p>
+        <h2>One obligation. Two independent notary paths.</h2>
+        <p>Every erasure request must originate from the guardian's wallet. Execution is witnessed either by the Attestor service via EIP-191 signatures or by Chainlink CRE Consensus via <code>onReport()</code>.</p>
+      </div>
+    </header>
+    <div class="settlement-map">
+      <div class="branch-node accepted">
+        <span>01</span>
+        <strong>Erasure Requested</strong>
+        <small>guardian wallet tx · scope key pinned · authority verified</small>
+      </div>
+      <div class="branch-rail" aria-hidden="true">
+        <span></span><span></span>
+      </div>
+      <div class="branch-options">
+        <div class="branch-node">
+          <span>02.A</span>
+          <strong>ATTESTOR Path</strong>
+          <small>Hub hot key signed · EIP-191 verified on-chain</small>
+          <b>LIVE TESTNET</b>
+        </div>
+        <div class="branch-node bond">
+          <span>02.B</span>
+          <strong>Chainlink DON Path</strong>
+          <small>Decentralized Oracle Network via CRE forwarder</small>
+          <b>DON NOTARIZED</b>
+        </div>
+      </div>
+      <p class="revert-note"><span>One-Way Ratchet</span> Full-scope erasure irreversibly transitions the subject state to <code>ERASED</code>. Scopes cannot be reopened or reused once shredded.</p>
+    </div>
+  </section>
+
+  <!-- Section 04: Live Policy Warden -->
+  <section class="section evidence-strip-section">
+    <header class="section-intro">
+      <div class="section-number">04</div>
+      <div>
+        <p class="eyebrow">On-Chain Policy Warden</p>
+        <h2>Active Statutory Rules</h2>
+        <p>The values below are read live from <code>PolicyRegistry.sol</code> on chain. When a child is enrolled, the current policy version is immutably pinned to their record.</p>
+      </div>
+    </header>
+    <div class="panel" style="background:var(--paper); padding:0; overflow:hidden;">
+      <div id="policies-table">
+        <p style="padding:24px; color:var(--muted);">Connecting to on-chain Policy Registry…</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 05: Live System Status -->
+  <section class="section">
+    <header class="section-intro">
+      <div class="section-number">05</div>
+      <div>
+        <p class="eyebrow">Network Truth</p>
+        <h2>Live System Status</h2>
+        <p>Connected RPC endpoints, confirmed block heights, and deployed contract addresses on the active network.</p>
+      </div>
+    </header>
+    <div class="panel">
+      <div id="chain-status">
+        <p style="color:var(--muted);">Querying live RPC status…</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Closing CTA -->
+  <section class="closing-cta">
+    <p>Organizations promise.<br><strong>Settlement is proof.</strong></p>
+    <div>
+      <a class="button button-primary" href="/guardian">Open Guardian Console <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+      <a class="button button-outline" href="/explorer">Open Explorer</a>
+    </div>
+  </section>
 </main>
-<div class="footer">OBLIVIA · BLI Legal Tech Hackathon 2 build · nothing here is stored on your behalf without your wallet consenting</div>
+
+<footer class="site-footer"></footer>
+
 <script src="/assets/ethers.umd.min.js"></script>
 <script src="/assets/app.js"></script>
 <script>
 const O = window.OBLIVIA;
 
 async function init() {
-  const st = await O.get('/api/chain/status');
-  const el = document.getElementById('status');
-  if (!st.ok) {
-    el.innerHTML = '<span class="badge bad">chain down: ' + O.esc(st.error || 'unknown') + '</span>';
-  } else {
-    el.innerHTML = 'RPC: <code>' + O.esc(st.chain?.rpc || '') + '</code> · head: <code>#' + st.blockNumber + '</code> · gas: <code>' + (st.gasPrice ? O.esc(st.gasPrice) : 'n/a') + '</code>' +
-      (st.deploy ? '<div class="hint mono">registry ' + O.esc(st.deploy.EraseRegistry) + '</div>' : '<div class="hint">no deployments.json yet</div>');
+  O.renderShell('/');
+
+  // Chain Status
+  try {
+    const st = await O.get('/api/chain/status');
+    const el = document.getElementById('chain-status');
+    if (!st.ok) {
+      el.innerHTML = '<span class="status-dot status-bad">Chain offline: ' + O.esc(st.error || 'unknown') + '</span>';
+    } else {
+      el.innerHTML = `
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:20px;">
+          <div class="metric">
+            <span>Network RPC</span>
+            <strong style="font-size:16px;">${O.esc(st.chain?.rpc || 'Local')}</strong>
+            <small>Chain ID: ${st.chainId || 31337}</small>
+          </div>
+          <div class="metric">
+            <span>Block Height</span>
+            <strong>#${st.blockNumber}</strong>
+            <small>Latest block confirmed</small>
+          </div>
+          <div class="metric">
+            <span>Erase Registry</span>
+            <strong class="mono" style="font-size:14px;">${O.short(st.deploy?.EraseRegistry || '', 8)}</strong>
+            <small class="mono break">${O.esc(st.deploy?.EraseRegistry || 'Not deployed')}</small>
+          </div>
+          <div class="metric">
+            <span>Policy Registry</span>
+            <strong class="mono" style="font-size:14px;">${O.short(st.deploy?.PolicyRegistry || '', 8)}</strong>
+            <small class="mono break">${O.esc(st.deploy?.PolicyRegistry || 'Not deployed')}</small>
+          </div>
+        </div>
+      `;
+    }
+  } catch (err) {
+    document.getElementById('chain-status').innerHTML = '<span class="status-dot status-bad">Error: ' + O.esc(err.message) + '</span>';
   }
-  const ps = await O.get('/api/policies');
-  document.getElementById('policies').innerHTML = '<table><thead><tr><th>Code</th><th>Self-erase</th><th>Retention</th><th>No profiling</th><th>Statute</th></tr></thead><tbody>' +
-    ps.map((p) => p.onChain && p.active
-      ? `<tr><td><code>${O.esc(p.code)}</code></td><td>${p.selfEraseAge}</td><td>${p.maxRetentionDays}d</td><td>${p.profilingAllowed ? 'no' : 'YES'}</td><td class="hint">${O.esc((p.statuteCite || '').slice(0, 42))}</td></tr>`
-      : `<tr><td><code>${O.esc(p.code)}</code></td><td colspan="4" class="badge ${p.onChain ? 'warn' : 'bad'}">${p.onChain ? 'inactive' : 'chain unreachable'}</td></tr>`)
-    .join('') + '</tbody></table>';
+
+  // Policies Table
+  try {
+    const ps = await O.get('/api/policies');
+    const tbl = document.getElementById('policies-table');
+    tbl.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Statute</th>
+            <th>Self-Erase Age</th>
+            <th>Max Retention</th>
+            <th>Profiling Ban</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${ps.map(p => p.onChain && p.active ? `
+            <tr>
+              <td><span class="truth-tag truth-live"><span></span>${O.esc(p.code)}</span></td>
+              <td><strong>${O.esc(p.statuteCite || '')}</strong></td>
+              <td><strong>${p.selfEraseAge}</strong> yrs</td>
+              <td>${p.maxRetentionDays} days</td>
+              <td>${p.profilingAllowed ? '<span class="badge warn">Allowed</span>' : '<span class="badge ok">Forbidden</span>'}</td>
+              <td><span class="status-dot status-good"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> Active v${p.version}</span></td>
+            </tr>
+          ` : `
+            <tr>
+              <td><span class="truth-tag"><span></span>${O.esc(p.code)}</span></td>
+              <td colspan="4" style="color:var(--muted);">Inactive or pending registration</td>
+              <td><span class="status-dot status-bad">Inactive</span></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  } catch (err) {
+    document.getElementById('policies-table').innerHTML = '<p style="padding:20px; color:var(--coral);">Unable to read policies: ' + O.esc(err.message) + '</p>';
+  }
 }
+
 init();
 </script>
 </body>

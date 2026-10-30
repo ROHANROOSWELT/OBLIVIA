@@ -1,54 +1,154 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Explorer · OBLIVIA</title>
 <link rel="stylesheet" href="/assets/style.css">
 </head>
 <body>
-<header class="topbar">
-  <div class="brand">OBLIVIA <small>on-chain explorer</small></div>
-  <nav><a href="/">Home</a><a href="/guardian">Guardian</a><a href="/verify">Verify</a></nav>
-</header>
-<main>
-  <h1>On-chain index</h1>
-  <p class="lead">Everything below is queried live from the configured RPC — nothing is cached or faked.</p>
-  <div class="panel" id="chain"></div>
+<a class="skip-link" href="#main-content">Skip to content</a>
+<header class="site-header"></header>
 
-  <div class="panel">
-    <h3>Policy tables (on-chain, live)</h3>
-    <div id="policies"></div>
+<main id="main-content" class="app-page">
+  <div class="page-title">
+    <div>
+      <p class="eyebrow">Public Rights Ledger</p>
+      <h1>On-Chain Explorer &amp; Audit Trail</h1>
+      <p>All metrics and logs below are read live from the configured EVM RPC. Every subject enrollment, policy version, and notarized erasure receipt is publicly auditable.</p>
+    </div>
+    <span class="truth-tag truth-live"><span></span>100% ON-CHAIN TRUTH</span>
   </div>
 
-  <div class="panel">
-    <h3>Notary queue / recent certificates</h3>
-    <div id="queue"></div>
+  <div class="panel" style="background:var(--deep); color:white; border-radius:12px; margin-bottom:30px;">
+    <div id="chain" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:20px;">
+      <p style="color:#b8beb7;">Querying on-chain state…</p>
+    </div>
   </div>
+
+  <section class="section" style="padding:0; border:0; margin-bottom:40px;">
+    <header class="section-intro" style="margin-bottom:24px;">
+      <div class="section-number">01</div>
+      <div>
+        <p class="eyebrow">Statutory Rule Tables</p>
+        <h2>Active Policy Registry</h2>
+        <p>Live rule parameters enforcing minor self-erasure thresholds, maximum data retention periods, and profiling bans across jurisdictions.</p>
+      </div>
+    </header>
+    <div class="panel" style="padding:0; overflow-x:auto;">
+      <div id="policies">
+        <p style="padding:20px; color:var(--muted);">Loading policies…</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" style="padding:0; border:0;">
+    <header class="section-intro" style="margin-bottom:24px;">
+      <div class="section-number">02</div>
+      <div>
+        <p class="eyebrow">Recent Notarizations</p>
+        <h2>Lifecycle Operations &amp; Certified DECs</h2>
+        <p>The queue of verified operations processed by the Dual-Notary system (Attestor EIP-191 or Chainlink CRE DON consensus).</p>
+      </div>
+    </header>
+    <div class="panel" style="padding:0; overflow-x:auto;">
+      <div id="queue">
+        <p style="padding:20px; color:var(--muted);">Loading operations queue…</p>
+      </div>
+    </div>
+  </section>
 </main>
-<script src="/assets/ethers.umd.min.js"></script><script src="/assets/app.js"></script>
+
+<footer class="site-footer"></footer>
+
+<script src="/assets/ethers.umd.min.js"></script>
+<script src="/assets/app.js"></script>
 <script>
 const O = window.OBLIVIA;
+
 async function refresh() {
+  O.renderShell('/explorer');
   const st = await O.get('/api/chain/status');
   document.getElementById('chain').innerHTML = st.ok
-    ? 'head <code>#' + st.blockNumber + '</code> · gas <code>' + (st.gasPrice ? O.esc(st.gasPrice) : '—') + '</code> · registry <code class="mono">' + O.esc(st.deploy?.EraseRegistry || '') + '</code>'
-    : '<span class="badge bad">' + O.esc(st.error || 'rpc error') + '</span>';
+    ? `
+      <div class="metric">
+        <span style="color:#a6aea5;">Network &amp; RPC</span>
+        <strong style="color:white; font-size:16px;">${O.esc(st.chain?.rpc || 'Local')}</strong>
+        <small style="color:#8f988f;">Chain ID: ${st.chainId || 31337}</small>
+      </div>
+      <div class="metric">
+        <span style="color:#a6aea5;">Current Block</span>
+        <strong style="color:var(--lime); font-size:24px;">#${st.blockNumber}</strong>
+        <small style="color:#8f988f;">Gas: ${st.gasPrice ? O.esc(st.gasPrice) : 'optimal'}</small>
+      </div>
+      <div class="metric">
+        <span style="color:#a6aea5;">Erase Registry</span>
+        <strong class="mono" style="color:white; font-size:14px;">${O.short(st.deploy?.EraseRegistry || '', 8)}</strong>
+        <small class="mono break" style="color:#8f988f;">${O.esc(st.deploy?.EraseRegistry || 'Not deployed')}</small>
+      </div>
+      <div class="metric">
+        <span style="color:#a6aea5;">Policy Registry</span>
+        <strong class="mono" style="color:white; font-size:14px;">${O.short(st.deploy?.PolicyRegistry || '', 8)}</strong>
+        <small class="mono break" style="color:#8f988f;">${O.esc(st.deploy?.PolicyRegistry || 'Not deployed')}</small>
+      </div>
+    `
+    : '<span class="status-dot status-bad">' + O.esc(st.error || 'RPC unreachable') + '</span>';
+
   const ps = await O.get('/api/policies');
   document.getElementById('policies').innerHTML = !ps.length
-    ? '<span class="hint">no policies on chain</span>'
-    : '<table><thead><tr><th>code</th><th>version</th><th>self-erase</th><th>retention</th><th>profiling</th><th>statute</th></tr></thead><tbody>' +
+    ? '<p style="padding:20px; color:var(--muted);">No policies found on chain.</p>'
+    : `<table>
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Version</th>
+            <th>Self-Erase Age</th>
+            <th>Max Retention</th>
+            <th>Profiling Ban</th>
+            <th>Statute Cite</th>
+          </tr>
+        </thead>
+        <tbody>` +
       ps.map(p => p.onChain && p.active
-        ? '<tr><td><code>' + O.esc(p.code) + '</code></td><td>' + p.version + '</td><td>' + p.selfEraseAge + '</td><td>' + p.maxRetentionDays + ' d</td><td>' + (p.profilingAllowed ? 'allowed' : '<b>forbidden</b>') + '</td><td class="hint">' + O.esc(p.statuteCite || '') + '</td></tr>'
-        : '<tr><td>' + O.esc(p.code) + '</td><td colspan="5" class="badge ' + (p.onChain ? 'warn' : 'bad') + '">' + (p.onChain ? 'inactive' : 'unreachable') + '</td></tr>')
-        .join('') + '</tbody></table>';
+        ? `<tr>
+            <td><span class="truth-tag truth-live"><span></span>${O.esc(p.code)}</span></td>
+            <td><strong>v${p.version}</strong></td>
+            <td><strong>${p.selfEraseAge}</strong> yrs</td>
+            <td>${p.maxRetentionDays} days</td>
+            <td>${p.profilingAllowed ? '<span class="badge warn">Allowed</span>' : '<span class="badge ok">Forbidden</span>'}</td>
+            <td class="hint">${O.esc(p.statuteCite || '')}</td>
+          </tr>`
+        : `<tr>
+            <td><span class="truth-tag"><span></span>${O.esc(p.code)}</span></td>
+            <td colspan="5"><span class="badge bad">${p.onChain ? 'Inactive' : 'Unreachable'}</span></td>
+          </tr>`
+      ).join('') + '</tbody></table>';
+
   const q = await O.get('/api/notary/queue');
   document.getElementById('queue').innerHTML = !q.ops?.length
-    ? '<span class="hint">no ops yet</span>'
-    : '<table><thead><tr><th>op</th><th>kind</th><th>stage</th><th>DEC</th></tr></thead><tbody>' +
-      q.ops.map(o => '<tr><td class="mono">' + O.short(o.opId) + '</td><td>' + O.esc(o.kind) + '</td><td>' + O.statusBadge(o.stage) + '</td><td class="mono">' + (o.decHash ? '<a href="/cert/' + o.decHash + '">' + O.short(o.decHash, 10) + '</a>' : '—') + '</td></tr>')
-        .join('') + '</tbody></table>';
+    ? '<p style="padding:20px; color:var(--muted);">No operations recorded in the queue yet.</p>'
+    : `<table>
+        <thead>
+          <tr>
+            <th>Operation ID</th>
+            <th>Kind</th>
+            <th>Stage</th>
+            <th>Certificate (DEC)</th>
+            <th>Tx Hash</th>
+          </tr>
+        </thead>
+        <tbody>` +
+      q.ops.map(o => `<tr>
+        <td class="mono"><code>${O.short(o.opId)}</code></td>
+        <td><strong>${O.esc(o.kind)}</strong></td>
+        <td>${O.statusBadge(o.stage)}</td>
+        <td class="mono">${o.decHash ? '<a class="button button-dark button-small" href="/cert/' + o.decHash + '">View DEC Receipt →</a>' : '—'}</td>
+        <td class="mono">${o.txHash ? '<a class="explorer-hash" href="#' + o.txHash + '">' + O.short(o.txHash, 8) + '</a>' : '—'}</td>
+      </tr>`).join('') + '</tbody></table>';
 }
-refresh(); setInterval(refresh, 4000);
+
+refresh();
+setInterval(refresh, 4000);
 </script>
 </body>
 </html>

@@ -1,50 +1,119 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Docs · OBLIVIA</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Protocol Documentation · OBLIVIA</title>
 <link rel="stylesheet" href="/assets/style.css">
 </head>
 <body>
-<header class="topbar">
-  <div class="brand">OBLIVIA <small>docs</small></div>
-  <nav><a href="/">Home</a><a href="/guardian">Guardian</a></nav>
-</header>
-<main>
-<h1>How Oblivia works</h1>
-<div class="panel"><h3>Who may ask, under which statute, at what age-boundary.</h3>
-<p>Oblivia is a rights lifecycle protocol for a parent or legal guardian to erase a child's
-data trail under a specific privacy statute — with a receipt — instead of a blind
-"delete my profile" app hook.</p>
-<h3>Flows</h3>
-<p><b>Enroll:</b> guardian opens a protected subject bound to a <em>live policy version</em>
-(jurisdiction, self-erase age, retention cap, profiling ban). Pseudonym only, the wallet
-out only hashes. Chain stores NO personal data.</p>
-<p><b>Consent &amp; data:</b> memories are encrypted in the guardian's browser
-(AES-256-GCM), hub stores only ciphertext. Guardian commits the data-root on chain.</p>
-<p><b>Erase:</b> guardian requests (wallet tx = authority proof) → op queued → notarized
-(Chainlink DON when CRE is configured, hub key otherwise) → on-chain receipt → DEC v2
-certificate hash pinned on chain (item nullifiers recomputed from ciphertext hash, all
-shred done only AFTER the receipt confirms) → hub wipes the ciphertext it held.</p>
-<h3>Stages the queue can be in</h3>
-<ul>
-<li><span class="badge warn">awaiting guardian txn</span> (entry created, no authority in hub yet)</li>
-<li><span class="badge info">queued for notary</span> (guardian tx seen)</li>
-<li><span class="badge info">notarized (ATTESTOR)</span> / <span class="badge info">report sent (DON)</span> (executor fired)</li>
-<li><span class="badge ok">confirmed on chain</span> (receipt verified → DEC issued + shred)</li>
-</ul>
-<h3>What is / is NOT stored on chain</h3>
-<p>On chain: statute-bound bindings, hashed commitments, DEC hashes, lifecycle transitions
-and wallet authority hand-offs. NOT on chain: any plaintext, any PII.</p>
-<h3>Trust model</h3>
-<p>Guardian funds gas. Hub has no guardian key. The attestor key signs only what a
-wallet already authorized. Anything the hub writes it published publicly on chain.</p>
-<h3>Change engine</h3>
-<p>Rule tables live in <code>PolicyRegistry</code> — jurisdictions can evolve without
-contract redeploy (semver per jurisdiction), historical versions remain addressable to
-prove what was in force at time of enrollment.</p>
-</div>
-<div class="footer">Run locally: <code>bash scripts/run-local.sh</code></div>
+<a class="skip-link" href="#main-content">Skip to content</a>
+<header class="site-header"></header>
+
+<main id="main-content" class="app-page">
+  <div class="page-title">
+    <div>
+      <p class="eyebrow">Protocol Specifications</p>
+      <h1>How OBLIVIA Works</h1>
+      <p>A minor rights lifecycle protocol enabling guardians to enforce right-to-erasure under specific statutory frameworks with on-chain, court-ready cryptographic receipts.</p>
+    </div>
+    <span class="truth-tag truth-live"><span></span>SPECIFICATION v2</span>
+  </div>
+
+  <section class="section" style="padding-top:0; border:0;">
+    <header class="section-intro">
+      <div class="section-number">01</div>
+      <div>
+        <p class="eyebrow">Core Workflows</p>
+        <h2>Statutory Lifecycles</h2>
+        <p>Four interconnected workflows govern how minor identity is enrolled, encrypted, shredded, and vested.</p>
+      </div>
+    </header>
+
+    <div class="depth-definitions" style="background:var(--paper); padding:20px; border:1px solid var(--rule);">
+      <li style="border-top:0;">
+        <span>01</span>
+        <div>
+          <h3>Enrollment &amp; Policy Pinning</h3>
+          <p>The guardian opens a protected subject bound to a live on-chain policy version (COPPA, MODPA, GDPR, DPDP). Only pseudonyms and hashes are recorded on chain. Zero personal data.</p>
+        </div>
+        <b>Enroll</b>
+      </li>
+      <li>
+        <span>02</span>
+        <div>
+          <h3>Client-Side Encrypted Storage</h3>
+          <p>Memories and logs are encrypted in the guardian's browser using WebCrypto AES-256-GCM. The hub only stores ciphertext blobs. The guardian commits the Merkle data-root on chain.</p>
+        </div>
+        <b>Vault</b>
+      </li>
+      <li>
+        <span>03</span>
+        <div>
+          <h3>Erasure &amp; Dual-Notary Witness</h3>
+          <p>The guardian issues a wallet transaction proving legal authority. The operation is queued and executed via either Attestor EIP-191 signatures or Chainlink CRE forwarders. A DEC v2 certificate hash is permanently pinned on chain, and the hub shreds all corresponding ciphertext.</p>
+        </div>
+        <b>Shred</b>
+      </li>
+      <li style="border-bottom:0;">
+        <span>04</span>
+        <div>
+          <h3>Statutory Rights Vesting</h3>
+          <p>Upon reaching the statutory threshold age, guardian authority automatically expires. The principal (now an adult) claims their own sovereign digital rights.</p>
+        </div>
+        <b>Vest</b>
+      </li>
+    </div>
+  </section>
+
+  <section class="section">
+    <header class="section-intro">
+      <div class="section-number">02</div>
+      <div>
+        <p class="eyebrow">Trust Model &amp; Invariants</p>
+        <h2>Cryptographic Guarantees</h2>
+        <p>Built with fail-closed security invariants ensuring no central entity can forge an erasure or overwrite a child's privacy ratchet.</p>
+      </div>
+    </header>
+
+    <div class="compare-grid">
+      <div class="compare-card firm">
+        <header>
+          <span>CHAIN TRUTH</span>
+          <h3>Stored On-Chain</h3>
+          <p>Publicly auditable on Base Sepolia.</p>
+        </header>
+        <ul>
+          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> Statute-bound jurisdiction tables (PolicyRegistry)</li>
+          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> Hashed commitments &amp; Merkle dataRoots</li>
+          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> DEC v2 core hashes &amp; nullifiers</li>
+          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> Irreversible erasure state ratchets</li>
+        </ul>
+      </div>
+
+      <div class="compare-card soft" style="background:#222c25; color:#f4f5ee;">
+        <header>
+          <span>ZERO PII</span>
+          <h3 style="color:white;">NEVER on Chain</h3>
+          <p style="color:#b8beb7;">Zero exposure of minor personal data.</p>
+        </header>
+        <ul style="color:#b8beb7;">
+          <li><span style="color:var(--coral);">×</span> NO minor names or birth dates</li>
+          <li><span style="color:var(--coral);">×</span> NO guardian identity documents</li>
+          <li><span style="color:var(--coral);">×</span> NO plaintext voice notes, chats, or profiles</li>
+          <li><span style="color:var(--coral);">×</span> NO server-held guardian private keys</li>
+        </ul>
+      </div>
+    </div>
+  </section>
 </main>
+
+<footer class="site-footer"></footer>
+
+<script src="/assets/ethers.umd.min.js"></script>
+<script src="/assets/app.js"></script>
+<script>
+window.OBLIVIA.renderShell('/docs');
+</script>
 </body>
 </html>

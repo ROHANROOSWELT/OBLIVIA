@@ -1,56 +1,88 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Notary seal · OBLIVIA</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Notary Queue · OBLIVIA</title>
 <link rel="stylesheet" href="/assets/style.css">
 </head>
 <body>
-<header class="topbar">
-  <div class="brand">OBLIVIA <small>notary queue</small></div>
-  <nav><a href="/">Home</a><a href="/guardian">Guardian</a><a href="/docs">Docs</a></nav>
-</header>
-<main>
-  <h1>Notary queue</h1>
-  <p class="lead">Lifecycle ops waiting for notarization. ANYONE with a wallet may attempt the
-  on-chain <code>notarySeal()</code> for a queued op — the contract only accepts the payload
-  signed by our hub key, so you cannot tamper; you only witness.</p>
-  <div class="panel" id="out"></div>
+<a class="skip-link" href="#main-content">Skip to content</a>
+<header class="site-header"></header>
+
+<main id="main-content" class="app-page">
+  <div class="page-title">
+    <div>
+      <p class="eyebrow">Permissionless Execution</p>
+      <h1>Notary Queue &amp; Witness Sealing</h1>
+      <p>Lifecycle operations waiting for on-chain notarization. Anyone with a web3 wallet may trigger <code>notarize()</code> for a queued operation. The smart contract validates the hub's EIP-191 signature over the exact operation payload.</p>
+    </div>
+    <span class="truth-tag truth-live"><span></span>DUAL NOTARY QUEUE</span>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Pending Operations Waiting for Seal</h2>
+      <span class="status-dot status-live">Auto-refreshing</span>
+    </div>
+    <div id="out" style="margin-top:16px; overflow-x:auto;">
+      <p style="color:var(--muted);">Loading queued operations…</p>
+    </div>
+  </div>
 </main>
+
+<footer class="site-footer"></footer>
+
 <script src="/assets/ethers.umd.min.js"></script>
 <script src="/assets/app.js"></script>
 <script>
 const O = window.OBLIVIA;
+
 async function refresh() {
+  O.renderShell('/seal');
   const q = await O.get('/api/notary/queue');
   const rows = (q.ops || []).filter(o => o.stage === 'QUEUED');
   document.getElementById('out').innerHTML = !rows.length
-    ? '<span class="hint">nothing queued. the attestor-worker or CRE workflow will seal ops automatically when configured.</span>'
-    : `<table><thead><tr><th>op</th><th>kind</th><th>scope</th><th>payload</th><th></th></tr></thead><tbody>` +
+    ? '<div style="padding:20px; background:#f4f2ea; border-radius:4px;"><p class="hint" style="margin:0;">No operations currently pending in queue. Attestor workers and Chainlink CRE forwarders automatically notarize operations as they are requested.</p></div>'
+    : `<table>
+        <thead>
+          <tr>
+            <th>Op ID</th>
+            <th>Kind</th>
+            <th>Scope Ref</th>
+            <th>Payload Digest</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>` +
       rows.map(o => `<tr>
-        <td class="mono">${O.short(o.opId)}</td>
-        <td>${O.esc(o.kind)}</td>
-        <td class="mono">${o.scopeRef === '0x' + '00'.repeat(32) ? 'FULL' : O.short(o.scopeRef)}</td>
-        <td class="mono">${O.short(o.payload)}</td>
-        <td><button onclick="seal('${o.opId}')">Seal</button></td>
+        <td class="mono"><code>${O.short(o.opId)}</code></td>
+        <td><strong>${O.esc(o.kind)}</strong></td>
+        <td class="mono">${o.scopeRef === '0x' + '00'.repeat(32) ? '<span class="badge info">FULL</span>' : O.short(o.scopeRef)}</td>
+        <td class="mono"><code>${O.short(o.payload)}</code></td>
+        <td><button class="button button-primary button-small" onclick="seal('${o.opId}')">Seal on Chain →</button></td>
       </tr>`).join('') + '</tbody></table>';
 }
+
 window.seal = async (opId) => {
   try {
     await O.connectWallet();
     const reg = await O.registry();
-    const entry = (await O.get('/api/notary/queue')).ops.find(o => o.opId === opId);
     const sigRes = await O.post('/api/notary/sign', { opId });
-    if (!sigRes.ok) throw new Error('hub sign failed');
+    if (!sigRes.ok) throw new Error('Hub signing failed: ' + (sigRes.error || 'unknown'));
     const tx = await reg.notarize(sigRes.payload, sigRes.sig);
     await tx.wait(1);
     const conf = await O.post('/api/notary/confirmed', { opId, txHash: tx.hash, notaryPath: 'ATTESTOR' });
-    if (!conf.ok) throw new Error(conf.error || 'confirm failed');
-    alert('Sealed. DEC: ' + conf.fullHash);
+    if (!conf.ok) throw new Error(conf.error || 'Confirm failed');
+    alert('Operation sealed on-chain! DEC Hash: ' + conf.fullHash);
     refresh();
-  } catch (e) { alert('✗ ' + (e.message || e)); }
+  } catch (e) { 
+    alert('Error: ' + (e.message || e)); 
+  }
 };
-refresh(); setInterval(refresh, 3000);
+
+refresh(); 
+setInterval(refresh, 3000);
 </script>
 </body>
 </html>

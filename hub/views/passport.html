@@ -1,36 +1,112 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Oblivia passport · OBLIVIA</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Digital Rights Passport · OBLIVIA</title>
 <link rel="stylesheet" href="/assets/style.css">
 </head>
 <body>
-<header class="topbar">
-  <div class="brand">OBLIVIA <small>digital life passport</small></div>
-  <nav><a href="/">Home</a><a href="/guardian">Guardian</a><a href="/explorer">Explorer</a></nav>
-</header>
-<main>
-  <h1>Oblivia life passport</h1>
-  <p class="lead">The on-chain binding of this child's public identity — no names, no PII — plus every erasure receipt.</p>
-  <div class="panel" id="body">loading…</div>
+<a class="skip-link" href="#main-content">Skip to content</a>
+<header class="site-header"></header>
+
+<main id="main-content" class="app-page">
+  <div class="page-title">
+    <div>
+      <p class="eyebrow">Minor Identity Binding</p>
+      <h1>Digital Rights Passport</h1>
+      <p>The on-chain pseudonym record for this minor. Displays statutory jurisdiction parameters, vault encryption commitments, and all historic erasure receipts.</p>
+    </div>
+    <span class="truth-tag truth-live"><span></span>SOVEREIGN LIFECYCLE</span>
+  </div>
+
+  <div id="body">
+    <div class="panel">
+      <p style="color:var(--muted);">Loading passport state…</p>
+    </div>
+  </div>
 </main>
-<script src="/assets/ethers.umd.min.js"></script><script src="/assets/app.js"></script>
+
+<footer class="site-footer"></footer>
+
+<script src="/assets/ethers.umd.min.js"></script>
+<script src="/assets/app.js"></script>
 <script>
 (async () => {
   const O = window.OBLIVIA, id = location.pathname.split('/')[2];
+  O.renderShell('/passport/' + id);
   const [sub, chain] = await Promise.all([O.get('/api/subjects/' + id), O.get('/api/chain/status')]);
   const oc = sub.onChain ?? {};
+  
+  const statusNames = ['NONE', 'ACTIVE', 'ERASED'];
+  const statusStr = statusNames[oc.status] || 'UNENROLLED';
+
   document.getElementById('body').innerHTML = `
-    <div class="kv">
-      <div class="k">subjectId (cryptonym)</div><div class="mono break">${O.esc(id)}</div>
-      <div class="k">jurisdiction</div><div>${O.esc(sub.jurisdiction)}</div>
-      <div class="k">items (hub, encrypted)</div><div>${sub.itemsCount}</div>
-      <div class="k">erased</div><div>${sub.erased ? '<span class="badge ok">yes</span>' : 'no'}</div>
-      <div class="k">on-chain binding</div><div class="mono">${oc.onChain ? 'guardian ' + O.esc(oc.guardian ?? '') + ' · v' + (oc.policyVersion ?? '') + ' · opened ' + (oc.openedAt ? new Date(oc.openedAt * 1000).toLocaleString() : '?') : 'not enrolled yet'}</div>
-      <div class="k">status</div><div>${oc.onChain ? ['EXISTS', 'ACTIVE', 'ERASED'][oc.status] ?? oc.status : '—'}</div>
+    <div class="maker-overview" style="border-radius:8px; overflow:hidden;">
+      <div class="maker-identity">
+        <div class="maker-avatar">P</div>
+        <div>
+          <small>Subject Pseudonym</small>
+          <strong class="mono break">${O.esc(id)}</strong>
+        </div>
+        <div>
+          <span class="badge ${oc.status === 2 ? 'bad' : 'ok'}">${statusStr}</span>
+        </div>
+      </div>
+
+      <div class="maker-metrics">
+        <div class="metric">
+          <span>Jurisdiction</span>
+          <strong style="color:var(--blue);">${O.esc(sub.jurisdiction || 'CPP')}</strong>
+          <small>Policy v${oc.policyVersion || 1}</small>
+        </div>
+        <div class="metric">
+          <span>Vault Encrypted Items</span>
+          <strong>${sub.itemsCount || 0}</strong>
+          <small>AES-256-GCM Blobs</small>
+        </div>
+        <div class="metric">
+          <span>Erased Status</span>
+          <strong>${sub.erased ? '<span style="color:var(--coral);">Shredded</span>' : '<span style="color:#2e5917;">Active</span>'}</strong>
+          <small>One-Way Ratchet</small>
+        </div>
+        <div class="metric">
+          <span>Guardian Authority</span>
+          <strong class="mono" style="font-size:13px;">${O.short(oc.guardian || sub.guardian || '', 6)}</strong>
+          <small>Enrolled on-chain</small>
+        </div>
+      </div>
     </div>
-    ${sub.decs?.length ? '<hr class="sep"><h2>Erasure receipts</h2>' + sub.decs.map((h) => `<div>· <a href="/cert/${O.esc(h)}" class="mono">${O.short(h, 12)}</a></div>`).join('') : ''}`;
+
+    <div class="panel" style="margin-top:28px;">
+      <h3 style="font-size:18px;">On-Chain Bindings &amp; Vesting Schedule</h3>
+      <div class="kv" style="margin-top:16px;">
+        <div class="k">Enrolled Timestamp</div>
+        <div>${oc.openedAt ? new Date(oc.openedAt * 1000).toLocaleString() : 'Pending'}</div>
+        <div class="k">Statutory Vesting</div>
+        <div>${oc.vestEligibleAt ? new Date(oc.vestEligibleAt * 1000).toLocaleDateString() : 'Upon Adulthood'} · Adult claims self-sovereignty</div>
+        <div class="k">DataRoot Commitment</div>
+        <div class="mono break">${O.esc(sub.dataRoot || 'None')}</div>
+      </div>
+    </div>
+
+    ${sub.decs?.length ? `
+      <div class="panel" style="margin-top:28px;">
+        <h3 style="font-size:18px;">Notarized Deletion Certificates (${sub.decs.length})</h3>
+        <table>
+          <thead><tr><th>Certificate Hash (DEC Core)</th><th>Verification Link</th></tr></thead>
+          <tbody>
+            ${sub.decs.map(h => `
+              <tr>
+                <td class="mono break"><code>${O.esc(h)}</code></td>
+                <td><a class="button button-dark button-small" href="/cert/${O.esc(h)}">View Receipt →</a></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    ` : ''}
+  `;
 })();
 </script>
 </body>

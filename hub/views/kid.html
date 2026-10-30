@@ -1,31 +1,93 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Your data · OBLIVIA</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your Data Privacy · OBLIVIA</title>
 <link rel="stylesheet" href="/assets/style.css">
 </head>
 <body>
-<header class="topbar">
-  <div class="brand">OBLIVIA <small>your data, your rules</small></div>
-  <nav><a href="/">Home</a><a href="/docs">Docs</a></nav>
-</header>
-<main>
-  <h1>Your data, your 🧭 rules</h1>
-  <p class="lead">A grown-up in your family has set up an account for you. You can always see
-  what is stored and ask them to erase it. When you are old enough, the controls belong to YOU.</p>
-  <div class="panel" id="facts">loading…</div>
+<a class="skip-link" href="#main-content">Skip to content</a>
+<header class="site-header"></header>
+
+<main id="main-content" class="app-page">
+  <div class="page-title">
+    <div>
+      <p class="eyebrow">Youth Privacy Compass</p>
+      <h1>Your Data. Your Rules.</h1>
+      <p>A parent or guardian set up a protected account for you. Your data is encrypted and locked. You can always check what is stored and ask for it to be deleted. Once you turn 18, the controls belong entirely to you.</p>
+    </div>
+    <span class="truth-tag truth-live"><span></span>KID SAFEGUARD</span>
+  </div>
+
+  <div id="facts">
+    <div class="panel">
+      <p style="color:var(--muted);">Checking your protection status…</p>
+    </div>
+  </div>
 </main>
-<script src="/assets/ethers.umd.min.js"></script><script src="/assets/app.js"></script>
+
+<footer class="site-footer"></footer>
+
+<script src="/assets/ethers.umd.min.js"></script>
+<script src="/assets/app.js"></script>
 <script>
 (async () => {
   const id = location.pathname.split('/')[2];
   const O = window.OBLIVIA;
+  O.renderShell('/kid/' + id);
   const s = await O.get('/api/subjects/' + id);
   const p = await O.get('/api/policies/' + (s.jurisdiction || 'CPP'));
+  
   document.getElementById('facts').innerHTML = !s.itemsCount
-    ? '<p>Nothing is stored right now.</p>'
-    : '<p class="mono">dataRoot: ' + O.esc(s.dataRoot) + '</p><p>' + s.itemsCount + ' item(s) are stored, encrypted. Your grown-up can erase them on request.</p><p>Rules for your region: self-erase allowed from age ' + O.esc(p.selfEraseAge) + ', max storage ' + O.esc(p.maxRetentionDays) + ' days.</p>';
+    ? `
+      <div class="panel" style="background:#f4fae5; border-color:#aac56f;">
+        <h2 style="color:#2e5917; margin-top:0;">You are protected!</h2>
+        <p>No personal records or voice logs are currently stored in your account.</p>
+      </div>
+    `
+    : `
+      <div class="guardian-grid">
+        <div class="trade-ticket">
+          <div class="panel-head">
+            <h2>Your Privacy Shield</h2>
+            <span class="badge ok">Protected</span>
+          </div>
+          <div style="margin:20px 0;">
+            <p><strong>${s.itemsCount}</strong> encrypted item(s) are stored safely in the vault.</p>
+            <p class="hint">The hub cannot read what they say because only your family's key can open them.</p>
+          </div>
+          <div class="metric" style="padding:14px; background:#f4f2ea; border-radius:4px;">
+            <span>Cryptographic DataRoot</span>
+            <code class="mono break" style="font-size:11px;">${O.esc(s.dataRoot)}</code>
+          </div>
+        </div>
+
+        <div class="depth-inspector">
+          <div class="panel-head">
+            <h2>Rules for Your Region (${O.esc(s.jurisdiction)})</h2>
+            <span class="badge info">${O.esc(p.statuteCite || 'Privacy Statute')}</span>
+          </div>
+          <div style="margin:20px 0; display:grid; gap:14px;">
+            <div class="metric">
+              <span>Self-Erasure Age</span>
+              <strong style="color:var(--blue);">${O.esc(p.selfEraseAge || 18)} years old</strong>
+              <small>When you reach this age, you can delete everything yourself.</small>
+            </div>
+            <div class="metric">
+              <span>Maximum Storage Limit</span>
+              <strong>${O.esc(p.maxRetentionDays || 30)} days</strong>
+              <small>Data cannot be kept forever under the law.</small>
+            </div>
+            <div class="metric">
+              <span>Behavioral Profiling</span>
+              <strong>${p.profilingAllowed ? 'Permitted with consent' : '<span style="color:#2e5917;">Strictly Forbidden</span>'}</strong>
+              <small>Companies cannot build secret behavior profiles on you.</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
 })();
 </script>
 </body>
