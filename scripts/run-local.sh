@@ -3,7 +3,7 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT/contracts"
-export PATH="$PATH:$HOME/.config/.foundry/bin"
+export PATH="$PATH:$HOME/.config/.foundry/bin:$HOME/.foundry/bin"
 
 if [ "${KEEP_ANVIL:-0}" != "1" ]; then
   anvil --port 8545 --block-time 1 > "$ROOT/hub/data/anvil.log" 2>&1 &
