@@ -23,6 +23,18 @@ const PORT = Number(process.env.PORT || 3000);
 const HUB_URL = process.env.HUB_URL || `http://127.0.0.1:${PORT}`;
 
 const app = express();
+
+// Cross-Origin Resource Sharing (CORS) for Vercel and multi-cloud clients
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Requested-With');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+  next();
+});
+
 app.use(express.json({ limit: '4mb' }));
 app.use(
   cookieSession({

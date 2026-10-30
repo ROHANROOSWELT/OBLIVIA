@@ -2,15 +2,38 @@
 window.OBLIVIA = (function () {
   const H = {};
 
+  // Dynamic API Base Resolution:
+  // - Defaults to relative URL (same-origin / Vercel rewrite proxy)
+  // - If window.__OBLIVIA_API_BASE__ or localStorage('oblivia_api_base') is set, prepends it
+  H.apiBase = (function () {
+    if (typeof window === 'undefined') return '';
+    if (window.__OBLIVIA_API_BASE__) return window.__OBLIVIA_API_BASE__.replace(/\/+$/, '');
+    try {
+      const stored = localStorage.getItem('oblivia_api_base');
+      if (stored) return stored.replace(/\/+$/, '');
+    } catch (e) {}
+    return '';
+  })();
+
+  H.url = (path) => {
+    if (/^https?:\/\//i.test(path)) return path;
+    const base = H.apiBase || '';
+    if (!path.startsWith('/')) path = '/' + path;
+    return base ? `${base}${path}` : path;
+  };
+
   H.get = async (url) => {
-    const r = await fetch(url, { credentials: 'same-origin' });
+    const fullUrl = H.url(url);
+    const r = await fetch(fullUrl, {
+      headers: { 'accept': 'application/json' },
+    });
     return r.json();
   };
   H.post = async (url, body) => {
-    const r = await fetch(url, {
+    const fullUrl = H.url(url);
+    const r = await fetch(fullUrl, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      credentials: 'same-origin',
+      headers: { 'content-type': 'application/json', 'accept': 'application/json' },
       body: JSON.stringify(body ?? {}),
     });
     return r.json();
