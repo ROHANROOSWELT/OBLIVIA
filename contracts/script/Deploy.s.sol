@@ -21,9 +21,10 @@ contract Deploy is Script {
 
     function run() external {
         uint256 pk = vm.envOr("PRIVATE_KEY", ANVIL_DEFAULT_PK);
+        address deployer = vm.rememberKey(pk);
         vm.startBroadcast(pk);
 
-        PolicyRegistry policy = new PolicyRegistry(msg.sender);
+        PolicyRegistry policy = new PolicyRegistry(deployer);
 
         // Seed jurisdiction rule tables (the Policy Warden).
         // codes: CPP=US-COPPA, MDP=US-Maryland(MODPA), EUR=EU(GDPR), IND=India(DPDP)
@@ -37,7 +38,7 @@ contract Deploy is Script {
         policy.publish(code_dpdp, 18, 30, false, unicode"India DPDP Act 2023 secs 9 & 12 + DPDP Rules");
 
         address attestor = vm.envOr("ATTESTOR_ADDRESS", address(0));
-        if (attestor == address(0)) attestor = msg.sender;
+        if (attestor == address(0)) attestor = deployer;
         address forwarder = vm.envOr("FORWARDER", address(0));
 
         EraseRegistry registry = new EraseRegistry(address(policy), forwarder, attestor);
@@ -66,7 +67,7 @@ contract Deploy is Script {
             vm.toString(block.timestamp),
             "}"
         );
-        vm.writeFile("../hub/deployments.json", json);
-        console2.log("Wrote ../hub/deployments.json");
+        vm.writeFile("deployments.json", json);
+        console2.log("Wrote contracts/deployments.json (run-local copies it to hub/)");
     }
 }

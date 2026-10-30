@@ -6,6 +6,7 @@ solc = "0.8.26"
 optimizer = true
 optimizer_runs = 20000
 via_ir = true
+fs_permissions = [{ access = "read-write", path = "./"}]
 
 [rpc_endpoints]
 sepolia_base = "https://sepolia.base.org"
