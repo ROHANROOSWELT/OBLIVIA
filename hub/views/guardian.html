@@ -259,12 +259,29 @@ async function onboard() {
 }
 
 async function clickWallet() {
-  account = await O.connectWallet();
-  $('walletAddr').textContent = O.short(account, 6);
+  try {
+    account = await O.connectWallet();
+    $('walletAddr').textContent = O.short(account, 6);
+  } catch (e) {
+    console.warn('Wallet chooser closed or error:', e.message || e);
+  }
 }
+
+window.addEventListener('oblivia:walletConnected', (e) => {
+  account = e.detail.account;
+  if ($('walletAddr')) $('walletAddr').textContent = O.short(account, 6);
+});
+window.addEventListener('oblivia:walletDisconnected', () => {
+  account = null;
+  if ($('walletAddr')) $('walletAddr').textContent = '';
+});
 
 async function boot() {
   O.renderShell('/guardian');
+  if (O.account) {
+    account = O.account;
+    $('walletAddr').textContent = O.short(account, 6);
+  }
   const st = await O.get('/api/chain/status');
   if (!st.deploy) { 
     $('enrollOut').innerHTML = '<span class="badge warn">Local chain not running or not deployed. Run <code>bash scripts/run-local.sh</code></span>'; 
