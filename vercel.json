@@ -7,48 +7,20 @@
       "destination": "http://20.244.4.11/api/:path*"
     },
     {
-      "source": "/",
-      "destination": "/hub/views/index.html"
-    },
-    {
-      "source": "/guardian",
-      "destination": "/hub/views/guardian.html"
-    },
-    {
-      "source": "/explorer",
-      "destination": "/hub/views/explorer.html"
-    },
-    {
-      "source": "/verify",
-      "destination": "/hub/views/verify.html"
-    },
-    {
       "source": "/verify/:path*",
-      "destination": "/hub/views/verify.html"
-    },
-    {
-      "source": "/seal",
-      "destination": "/hub/views/seal.html"
-    },
-    {
-      "source": "/docs",
-      "destination": "/hub/views/docs.html"
+      "destination": "/verify.html"
     },
     {
       "source": "/passport/:path*",
-      "destination": "/hub/views/passport.html"
+      "destination": "/passport.html"
     },
     {
       "source": "/kid/:path*",
-      "destination": "/hub/views/kid.html"
+      "destination": "/kid.html"
     },
     {
       "source": "/cert/:path*",
-      "destination": "/hub/views/cert.html"
-    },
-    {
-      "source": "/assets/:path*",
-      "destination": "/hub/views/assets/:path*"
+      "destination": "/cert.html"
     }
   ]
 }
