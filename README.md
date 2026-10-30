@@ -65,7 +65,7 @@ Pages: `/` (landing), `/guardian` (hero flow), `/kid/:subjectId`, `/passport/:su
 
 ```bash
 cp .env.example .env          # PRIVATE_KEY (burner), RPC_URL=https://sepolia.base.org
-bash scripts/deploy.sh        # pending: deploy.sh is the next commit's work
+bash scripts/deploy.sh        # env: PRIVATE_KEY (burner), ETHERSCAN_API_KEY (via etherscn API)
 ```
 
 ## Honest limits (see docs/SUBMISSION.md §limits)
