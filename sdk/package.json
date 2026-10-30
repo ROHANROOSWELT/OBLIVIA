@@ -1,0 +1,32 @@
+{
+  "name": "@oblivia/sdk",
+  "version": "0.1.0",
+  "description": "OBLIVIA Minor Rights Lifecycle Protocol SDK — op encoding, attestor signing, DEC v2 evidence, chain reads, unsigned tx builders. The same primitives the protocol's hub and contracts use, packaged for integrators.",
+  "type": "module",
+  "main": "src/index.js",
+  "files": [
+    "src",
+    "examples",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node --test 'tests/*.spec.mjs'",
+    "test:quick": "node --test 'tests/*.spec.mjs'"
+  },
+  "keywords": [
+    "oblivia",
+    "privacy",
+    "erasure",
+    "legaltech",
+    "kyc",
+    "gdpr",
+    "coppa",
+    "dpdp",
+    "evidence",
+    "chainlink"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "ethers": "^6.17.0"
+  }
+}

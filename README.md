@@ -26,6 +26,7 @@ from a passphrase that never leaves the browser); the hub keeps only
 contracts/   Foundry: PolicyRegistry, EraseRegistry (Chainlink IReceiver consumer), 13 tests, deploy+seed
 hub/         Express MPA server: vault (browser-enc AES-GCM storage), DEC v2 engine,
              notary queue, live chain reads, attestor executor loop; views/ = the 8 MPA pages
+sdk/         @oblivia/sdk: op encoding, DEC v2 evidence, unsigned tx builders, chain client, 663 tests
 workflows/   Dual-notary runbook (attestor path live; DON path = CRE CLI setup documented)
 scripts/     run-local.sh (anvil + deploy + abi export), export-abi.mjs
 ```
