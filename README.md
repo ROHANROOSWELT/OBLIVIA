@@ -38,6 +38,46 @@ OBLIVIA bridges cryptographic immutability and statutory right-to-erasure throug
 
 ---
 
+## 2. Live Deployments & Full 3-Minute Video Demonstration
+
+The protocol is fully operational, publicly accessible, and verifiable across local and multi-cloud environments:
+
+| Component | Target URL / Host | Network / Engine | Status |
+|:---|:---|:---|:---|
+| **Production Frontend** | [https://oblivia-protocol.vercel.app](https://oblivia-protocol.vercel.app) | Vercel Edge Global CDN | Active |
+| **Decentralized Backend & Chain** | `http://20.244.4.11` | Azure VM (Central India) · Ubuntu 24.04 | Active |
+| **Decentralized RPC Endpoint** | `http://20.244.4.11:8545` | EVM Ledger (EraseRegistry & PolicyRegistry) | Active |
+| **Notary Daemon & Executor** | Systemd Service `oblivia-attestor` | EIP-191 Multi-Witness Notary | Active |
+| **Full 3-Minute Video Demo** | `oblivia-demo-3min.mp4` | 1080p 30fps H.264/AAC (180.00s exact) | Generated |
+
+### 3-Minute Synchronized Walkthrough Timeline (180.00 Seconds)
+
+A full continuous 3-minute video walkthrough (`oblivia-demo-3min.mp4`) with professional neural voiceover is generated and available in the root of this repository:
+
+1. **0:00 - 0:30 \| Statutory Privacy Crisis & Regulatory Mandates**:
+   - Examination of GDPR Article 17, COPPA 16 CFR § 312, CCPA/CPRA, and DPDP Act requirements.
+   - Contrast between legacy unverified email tickets and on-chain mathematical non-repudiation.
+2. **0:30 - 0:56 \| Multi-Wallet Authentication & EIP-6963 Isolation**:
+   - Smooth slide-down modal (`.wallet-dialog`) preventing vendor lock-in.
+   - Provider choice between MetaMask, OKX Wallet, generic injected Web3, and instant Local Anvil Dev Signer.
+3. **0:56 - 1:26 \| Guardian Console & On-Chain Minor Enrollment**:
+   - Live query of `PolicyRegistry.sol` governing terms (SLA limits, consensus rules, retention days).
+   - Executing `openSubject` on `EraseRegistry.sol`, registering the zero-PII pseudonym hash.
+4. **1:26 - 1:51 \| Client-Side Encrypted Memory Vault**:
+   - Browser-derived PBKDF2/AES-256-GCM encryption of voice logs and biometric sessions.
+   - Zero-knowledge commitment pinning on-chain via `addMemory()`.
+5. **1:51 - 2:13 \| Statutory Erasure Request & Cryptographic Shredding**:
+   - Guardian exercise of the Right to be Forgotten.
+   - Irreversible zeroization of client decryption keys (cryptographic shredding) and operation broadcasting.
+6. **2:13 - 2:36 \| Dual-Notary Consensus & On-Chain Sealing**:
+   - Decentralized Notary Queue (`/seal`) handling dual-notary attestation (`ATTESTOR` + Chainlink CRE `DON`).
+   - Mining `notarize()` on `EraseRegistry.sol` to stamp the permanent proof onto the ledger.
+7. **2:36 - 3:00 \| Court-Admissible DEC v2 & Independent Verification**:
+   - Official Digital Erasure Certificate view (`/cert/:decHash`) with jurisdiction citations.
+   - Zero-backend client-side verification (`/verify`) validating the Merkle root and notary signatures.
+
+---
+
 ## 2. System Architecture & Cryptographic Isolation
 
 ```mermaid

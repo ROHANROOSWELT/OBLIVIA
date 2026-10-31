@@ -20,13 +20,25 @@
     <span class="truth-tag truth-live"><span></span>DUAL NOTARY QUEUE</span>
   </div>
 
-  <div class="panel">
+  <div id="msgOut" style="margin-bottom:20px;"></div>
+
+  <div class="panel" style="margin-bottom:30px;">
     <div class="panel-head">
       <h2>Pending Operations Waiting for Seal</h2>
-      <span class="status-dot status-live">Auto-refreshing</span>
+      <span class="status-dot status-live">Auto-refreshing queue</span>
     </div>
     <div id="out" style="margin-top:16px; overflow-x:auto;">
       <p style="color:var(--muted);">Loading queued operations…</p>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Recently Notarized &amp; Issued DECs</h2>
+      <span class="badge ok">Court-Admissible</span>
+    </div>
+    <div id="confirmedOut" style="margin-top:16px; overflow-x:auto;">
+      <p style="color:var(--muted);">Loading verified receipts…</p>
     </div>
   </div>
 </main>
@@ -41,31 +53,59 @@ const O = window.OBLIVIA;
 async function refresh() {
   O.renderShell('/seal');
   const q = await O.get('/api/notary/queue');
-  const rows = (q.ops || []).filter(o => o.stage === 'QUEUED');
-  document.getElementById('out').innerHTML = !rows.length
-    ? '<div style="padding:20px; background:#f4f2ea; border-radius:4px;"><p class="hint" style="margin:0;">No operations currently pending in queue. Attestor workers and Chainlink CRE forwarders automatically notarize operations as they are requested.</p></div>'
+  const allOps = q.ops || [];
+  const pendingRows = allOps.filter(o => o.stage === 'QUEUED' || o.stage === 'ATTESTED');
+  const confirmedRows = allOps.filter(o => o.stage === 'CONFIRMED').slice(0, 8);
+
+  document.getElementById('out').innerHTML = !pendingRows.length
+    ? '<div style="padding:20px; background:#f4f2ea; border-radius:4px;"><p class="hint" style="margin:0;">All queued operations currently sealed. Dual-notary daemons continuously notarize operations as they arrive.</p></div>'
     : `<table>
         <thead>
           <tr>
             <th>Op ID</th>
             <th>Kind</th>
+            <th>Stage</th>
             <th>Scope Ref</th>
             <th>Payload Digest</th>
             <th>Action</th>
           </tr>
         </thead>
         <tbody>` +
-      rows.map(o => `<tr>
+      pendingRows.map(o => `<tr>
         <td class="mono"><code>${O.short(o.opId)}</code></td>
         <td><strong>${O.esc(o.kind)}</strong></td>
+        <td><span class="badge ${o.stage === 'ATTESTED' ? 'info' : 'warn'}">${O.esc(o.stage)}</span></td>
         <td class="mono">${o.scopeRef === '0x' + '00'.repeat(32) ? '<span class="badge info">FULL</span>' : O.short(o.scopeRef)}</td>
         <td class="mono"><code>${O.short(o.payload)}</code></td>
         <td><button class="button button-primary button-small" onclick="seal('${o.opId}')">Seal on Chain →</button></td>
       </tr>`).join('') + '</tbody></table>';
+
+  document.getElementById('confirmedOut').innerHTML = !confirmedRows.length
+    ? '<p class="hint" style="margin:0;">No confirmed certificates yet.</p>'
+    : `<table>
+        <thead>
+          <tr>
+            <th>Op ID</th>
+            <th>DEC Hash</th>
+            <th>Tx Hash</th>
+            <th>Block</th>
+            <th>Certificate</th>
+          </tr>
+        </thead>
+        <tbody>` +
+      confirmedRows.map(o => `<tr>
+        <td class="mono"><code>${O.short(o.opId)}</code></td>
+        <td class="mono"><code>${O.short(o.decHash || '0x...')}</code></td>
+        <td class="mono"><a class="explorer-hash" href="/explorer#${o.txHash}">${O.short(o.txHash || '0x...')}</a></td>
+        <td>${o.blockNumber || 'Mining'}</td>
+        <td><a class="button button-dark button-small" href="/cert/${o.decHash}">View DEC v2 →</a></td>
+      </tr>`).join('') + '</tbody></table>';
 }
 
 window.seal = async (opId) => {
+  const msgEl = document.getElementById('msgOut');
   try {
+    msgEl.innerHTML = '<div class="banner banner-info"><span class="status-dot status-live">Notarizing operation on chain…</span></div>';
     await O.connectWallet();
     const reg = await O.registry();
     const sigRes = await O.post('/api/notary/sign', { opId });
@@ -74,10 +114,18 @@ window.seal = async (opId) => {
     await tx.wait(1);
     const conf = await O.post('/api/notary/confirmed', { opId, txHash: tx.hash, notaryPath: 'ATTESTOR' });
     if (!conf.ok) throw new Error(conf.error || 'Confirm failed');
-    alert('Operation sealed on-chain! DEC Hash: ' + conf.fullHash);
+    msgEl.innerHTML = `
+      <div class="banner banner-ok" style="background:#eaf6ee; border:1px solid #c2e5cc; padding:16px; border-radius:6px; display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <strong>Statutory Seal Recorded On-Chain!</strong>
+          <div style="font-size:12px; margin-top:4px;">DEC Hash: <code class="mono">${O.short(conf.fullHash)}</code> · Tx: <code class="mono">${O.short(tx.hash)}</code></div>
+        </div>
+        <a class="button button-primary button-small" href="/cert/${conf.fullHash}">View Court Certificate →</a>
+      </div>
+    `;
     refresh();
   } catch (e) { 
-    alert('Error: ' + (e.message || e)); 
+    msgEl.innerHTML = `<div class="banner banner-bad" style="background:#fef0ed; border:1px solid #f9cbc4; padding:16px; border-radius:6px; color:#c72511;"><strong>Seal Error:</strong> ${O.esc(e.message || e)}</div>`; 
   }
 };
 

@@ -10,3 +10,4 @@ workflows/bin/
 
 hub/deployments.json
 contracts/deployments.json
+.vercel
